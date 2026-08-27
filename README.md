@@ -1,4 +1,7 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Car rental customer front-end, built from the Figma wireframe in
+`docs/figma-frontend-spec.md` (Technical Assessment Task — Digital Pylot, part 2).
+
+Stack: Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · Yarn.
 
 ## Getting Started
 
@@ -18,9 +21,28 @@ yarn dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `src/app/page.tsx`. The page auto-updates as you edit the file.
+## Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/app/page.tsx           composes the landing page sections
+src/components/            one file per section + shared pieces
+  booking-context.tsx      trip + selected-car state shared by search and cards
+  search-bar.tsx           pick-up / drop-off rental search interface
+  rental-deals.tsx         category tabs, car grid, show-more
+  car-card.tsx             vehicle card (favourite, specs, Rent Now)
+  booking-modal.tsx        booking summary dialog
+src/lib/data.ts            mock fleet, cities, steps, features, testimonials
+docs/figma-frontend-spec.md  captured Figma wireframe spec (sections, copy, tokens)
+```
+
+## Sections and interactions
+
+Nav (mobile drawer) · hero · pick-up / drop-off search (city, date, time, swap,
+search scrolls to results) · how it works · popular deals (category tabs,
+favourites, show more, `Rent Now` opens a booking summary that reflects the search)
+· why choose us · promos · testimonial carousel (drag/arrows/dots) · footer.
+
+Layout is responsive at mobile, tablet and desktop breakpoints.
 
 ## Learn More
 

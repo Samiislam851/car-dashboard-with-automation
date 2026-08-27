@@ -1,1 +1,41 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #1a202c;
+  --color-muted: #90a3bf;
+  --color-surface: #f6f7f9;
+  --color-line: #e4e8f0;
+
+  --color-brand-50: #eef3ff;
+  --color-brand-100: #dbe5ff;
+  --color-brand-300: #85a8f8;
+  --color-brand-500: #4c74ee;
+  --color-brand-600: #3563e9;
+  --color-brand-700: #2a4fbd;
+
+  --radius-card: 10px;
+
+  --animate-rise: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: #fff;
+  color: var(--color-ink);
+}
+
+/* Shared building blocks — keeps section markup short. */
+@utility container-page {
+  width: 100%;
+  margin-inline: auto;
+  max-width: 1320px;
+  padding-inline: 1.25rem;
+}
