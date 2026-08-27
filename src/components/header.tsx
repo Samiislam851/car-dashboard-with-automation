@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { LogOut, Menu, X } from "lucide-react";
 
 const LINKS = [
   { href: "#home", label: "Home" },
@@ -11,8 +13,19 @@ const LINKS = [
   { href: "#testimonial", label: "Testimonial" },
 ];
 
-export function Header() {
+export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    setLoggingOut(false);
+    setOpen(false);
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-white/85 backdrop-blur">
@@ -34,15 +47,29 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-5 lg:flex">
-          <a href="#" className="text-[15px] font-medium text-ink/70 underline-offset-4 hover:underline">
-            Register
-          </a>
-          <a
-            href="#"
-            className="rounded-md bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
-          >
-            Log In
-          </a>
+          {isAuthenticated ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+            >
+              <LogOut size={16} />
+              {loggingOut ? "Logging out…" : "Log Out"}
+            </button>
+          ) : (
+            <>
+              <Link href="/register" className="text-[15px] font-medium text-ink/70 underline-offset-4 hover:underline">
+                Register
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-md bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+              >
+                Log In
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -69,14 +96,34 @@ export function Header() {
                 {link.label}
               </a>
             ))}
-            <div className="flex gap-3 py-3">
-              <a href="#" className="flex-1 rounded-md border border-line py-2.5 text-center text-sm font-semibold">
-                Register
-              </a>
-              <a href="#" className="flex-1 rounded-md bg-brand-600 py-2.5 text-center text-sm font-semibold text-white">
-                Log In
-              </a>
-            </div>
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-600 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+              >
+                <LogOut size={16} />
+                {loggingOut ? "Logging out…" : "Log Out"}
+              </button>
+            ) : (
+              <div className="flex gap-3 py-3">
+                <Link
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-md border border-line py-2.5 text-center text-sm font-semibold"
+                >
+                  Register
+                </Link>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-md bg-brand-600 py-2.5 text-center text-sm font-semibold text-white"
+                >
+                  Log In
+                </Link>
+              </div>
+            )}
           </div>
         </nav>
       )}
