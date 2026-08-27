@@ -35,18 +35,20 @@ function slugify(label: string) {
   return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-const AdminSideBar = ({ open }: { open: boolean }) => {
+const AdminSideBar = ({ open, onNavigate }: { open: boolean; onNavigate?: () => void }) => {
   const pathname = usePathname();
 
   return (
     <aside
-      className={`h-screen shrink-0 overflow-hidden border-r border-admin-border bg-white transition-[width] duration-300 ease-in-out ${
+      className={`fixed inset-y-0 left-0 z-40 h-screen shrink-0 overflow-hidden border-r border-admin-border bg-white transition-[width] duration-300 ease-in-out md:static ${
         open ? "w-[252px]" : "w-0 border-r-0"
       }`}
     >
       <div className="flex h-screen w-[252px] flex-col font-nunito">
         <Link href="/admin" className="flex h-[65px] shrink-0 items-center border-b border-admin-border px-4 py-2.5">
-          <Image src="/admin/images/logo.png" alt="Best Auto" width={116} height={36} className="h-9 w-[116px] object-contain" />
+          <span className="relative block h-9 w-[114.545px] shrink-0">
+            <Image src="/admin/images/logo.png" alt="Best Auto" fill sizes="115px" className="object-cover" />
+          </span>
         </Link>
 
         <nav className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
@@ -67,6 +69,7 @@ const AdminSideBar = ({ open }: { open: boolean }) => {
                       <li key={item}>
                         <Link
                           href={href}
+                          onClick={onNavigate}
                           aria-current={active ? "page" : undefined}
                           className={`flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors ${
                             active ? "bg-admin-primary-50" : "hover:bg-admin-surface"

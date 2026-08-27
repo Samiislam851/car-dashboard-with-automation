@@ -1,66 +1,112 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 
-const AdminTopbar = ({ open, onToggle }: { open: boolean; onToggle: () => void }) => {
+const STORES = ["Coming Soon", "Downtown Branch", "Airport Branch", "Warehouse 2"];
+
+const AdminTopbar = () => {
+  const [store, setStore] = useState(STORES[0]);
+  const [storeOpen, setStoreOpen] = useState(false);
+  const storeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!storeOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (storeRef.current && !storeRef.current.contains(e.target as Node)) {
+        setStoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [storeOpen]);
+
   return (
-    <header className="relative flex h-[65px] shrink-0 items-center gap-2.5 border-b border-admin-border bg-white px-6 py-2.5 font-nunito">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
-        aria-expanded={open}
-        className="absolute top-[22px] left-[-10px] z-50 flex size-5 items-center justify-center rounded-[10px] bg-admin-primary transition-transform duration-300 ease-in-out hover:brightness-95"
-      >
-        <img
-          src="/admin/icons/sidebar-toggle-left.svg"
-          alt=""
-          className={`size-4 transition-transform duration-300 ${open ? "" : "rotate-180"}`}
-        />
-      </button>
-
-      <div className="flex w-[229px] shrink-0 items-center gap-2 rounded-lg border border-admin-border bg-white p-2">
+    <header className="relative flex h-[65px] shrink-0 items-center gap-2 border-b border-admin-border bg-white py-2.5 pr-4 pl-10 font-nunito md:gap-2.5 md:pr-6">
+      <div className="flex min-w-0 flex-1 shrink items-center gap-2 rounded-lg border border-admin-border bg-white p-2 xl:w-[229px] xl:flex-none">
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <img src="/admin/icons/search.svg" alt="" className="size-3.5 shrink-0" />
-          <span className="truncate text-[13px] leading-[19.5px] text-admin-grey-300">Search</span>
+          <input
+            type="text"
+            placeholder="Search"
+            className="w-full min-w-0 truncate bg-transparent text-[13px] leading-[19.5px] text-admin-grey-900 placeholder:text-admin-grey-300 outline-none"
+          />
         </div>
-        <div className="flex shrink-0 items-center gap-1 rounded-[5px] bg-admin-border p-1">
+        <div className="hidden shrink-0 items-center gap-1 rounded-[5px] bg-admin-border p-1 xl:flex">
           <img src="/admin/icons/command.svg" alt="" className="size-2.5" />
           <span className="text-[10px] leading-[15px] font-medium text-admin-secondary">K</span>
         </div>
       </div>
 
-      <div className="flex flex-1 items-center justify-end gap-3 min-w-0">
-        <div className="flex h-[34px] shrink-0 items-center gap-2 rounded-lg border border-admin-border bg-white px-2 py-1">
-          <Image src="/admin/images/store-thumb.png" alt="" width={16} height={16} className="size-4 shrink-0 rounded object-cover" />
-          <span className="text-sm leading-[21px] text-admin-grey-900">Coming Soon</span>
-          <img src="/admin/icons/caret-down.svg" alt="" className="h-[3.5px] w-[7px]" />
+      <div className="flex shrink-0 items-center gap-2 md:gap-3">
+        <div ref={storeRef} className="relative hidden shrink-0 lg:block">
+          <button
+            type="button"
+            onClick={() => setStoreOpen((v) => !v)}
+            aria-haspopup="listbox"
+            aria-expanded={storeOpen}
+            className="flex h-[34px] cursor-pointer items-center gap-2 rounded-lg border border-admin-border bg-white px-2 py-1 transition hover:bg-admin-surface"
+          >
+            <Image src="/admin/images/store-thumb.png" alt="" width={16} height={16} className="size-4 shrink-0 rounded object-cover" />
+            <span className="text-sm leading-[21px] whitespace-nowrap text-admin-grey-900">{store}</span>
+            <img
+              src="/admin/icons/caret-down.svg"
+              alt=""
+              className={`h-[3.5px] w-[7px] transition-transform ${storeOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {storeOpen && (
+            <ul
+              role="listbox"
+              className="absolute top-[calc(100%+6px)] right-0 z-50 w-[200px] overflow-hidden rounded-lg border border-admin-border bg-white py-1 shadow-lg"
+            >
+              {STORES.map((option) => (
+                <li key={option}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={option === store}
+                    onClick={() => {
+                      setStore(option);
+                      setStoreOpen(false);
+                    }}
+                    className={`w-full cursor-pointer px-3 py-2 text-left text-sm transition-colors hover:bg-admin-surface ${
+                      option === store ? "font-medium text-admin-primary" : "text-admin-grey-900"
+                    }`}
+                  >
+                    {option}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
           <button
             type="button"
-            className="flex items-center gap-1 rounded-[5px] bg-admin-primary px-3 py-[7px] text-[13px] leading-[19.5px] font-medium text-white transition hover:brightness-95"
+            className="flex cursor-pointer items-center gap-1 rounded-[5px] bg-admin-primary px-3 py-[7px] text-[13px] leading-[19.5px] font-medium text-white transition hover:brightness-95"
           >
             <img src="/admin/icons/circle-plus.svg" alt="" className="size-[13px]" />
-            Add New
+            <span className="hidden xl:inline">Add New</span>
           </button>
           <button
             type="button"
-            className="flex items-center gap-1 rounded-[5px] bg-admin-secondary px-3 py-[7px] text-[13px] leading-[19.5px] font-medium text-white transition hover:brightness-110"
+            className="flex cursor-pointer items-center gap-1 rounded-[5px] bg-admin-secondary px-3 py-[7px] text-[13px] leading-[19.5px] font-medium text-white transition hover:brightness-110"
           >
             <img src="/admin/icons/device-laptop-header.svg" alt="" className="size-[13px]" />
-            POS
+            <span className="hidden xl:inline">POS</span>
           </button>
         </div>
 
-        <div className="h-full w-px shrink-0 bg-admin-border" />
+        <div className="hidden h-full w-px shrink-0 bg-admin-border lg:block" />
 
-        <div className="flex shrink-0 items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 md:gap-3">
           <button
             type="button"
             aria-label="Language"
-            className="flex size-[34px] items-center justify-center rounded-[10px] bg-admin-surface transition hover:brightness-95"
+            className="hidden size-[34px] cursor-pointer items-center justify-center rounded-[10px] bg-admin-surface transition hover:brightness-95 lg:flex"
           >
             <Image src="/admin/images/language-flag.png" alt="" width={16} height={16} className="size-4 object-cover" />
           </button>
@@ -68,7 +114,7 @@ const AdminTopbar = ({ open, onToggle }: { open: boolean; onToggle: () => void }
           <button
             type="button"
             aria-label="Maximize"
-            className="flex size-[34px] items-center justify-center rounded-[10px] bg-admin-surface transition hover:brightness-95"
+            className="hidden size-[34px] cursor-pointer items-center justify-center rounded-[10px] bg-admin-surface transition hover:brightness-95 lg:flex"
           >
             <img src="/admin/icons/maximize.svg" alt="" className="size-4" />
           </button>
@@ -76,7 +122,7 @@ const AdminTopbar = ({ open, onToggle }: { open: boolean; onToggle: () => void }
           <button
             type="button"
             aria-label="Mail"
-            className="relative flex size-[34px] items-center justify-center rounded-[10px] bg-admin-surface transition hover:brightness-95"
+            className="relative hidden size-[34px] cursor-pointer items-center justify-center rounded-[10px] bg-admin-surface transition hover:brightness-95 lg:flex"
           >
             <span className="flex items-center justify-center rounded-lg bg-admin-surface-2 p-2">
               <img src="/admin/icons/mail.svg" alt="" className="size-4" />
@@ -89,7 +135,7 @@ const AdminTopbar = ({ open, onToggle }: { open: boolean; onToggle: () => void }
           <button
             type="button"
             aria-label="Notifications"
-            className="flex size-[34px] items-center justify-center rounded-lg bg-admin-surface-2 transition hover:brightness-95"
+            className="flex size-[34px] cursor-pointer items-center justify-center rounded-lg bg-admin-surface-2 transition hover:brightness-95"
           >
             <img src="/admin/icons/bell.svg" alt="" className="size-4" />
           </button>
@@ -97,7 +143,7 @@ const AdminTopbar = ({ open, onToggle }: { open: boolean; onToggle: () => void }
           <button
             type="button"
             aria-label="Settings"
-            className="flex size-[34px] items-center justify-center rounded-lg bg-admin-surface-2 transition hover:brightness-95"
+            className="hidden size-[34px] cursor-pointer items-center justify-center rounded-lg bg-admin-surface-2 transition hover:brightness-95 lg:flex"
           >
             <img src="/admin/icons/settings.svg" alt="" className="size-4" />
           </button>
