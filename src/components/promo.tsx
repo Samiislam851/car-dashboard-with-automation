@@ -14,8 +14,8 @@ const PROMOS = [
     title: "Easy way to rent a car at a low price",
     body: "Providing cheap car rental services and safe and comfortable facilities.",
     cta: "Rental Car",
-    from: "from-sky-500",
-    to: "to-sky-400",
+    from: "from-brand-700",
+    to: "to-brand-600",
     tint: "#ffffff",
   },
 ];

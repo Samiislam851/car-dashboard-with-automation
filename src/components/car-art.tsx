@@ -1,5 +1,5 @@
 /** Side-view car illustration. The Figma wireframe only had a grey placeholder here. */
-export function CarArt({ tint = "#3563e9", className }: { tint?: string; className?: string }) {
+export function CarArt({ tint = "#fe9f43", className }: { tint?: string; className?: string }) {
   return (
     <svg viewBox="0 0 320 140" className={className} role="img" aria-label="Car illustration">
       <ellipse cx="160" cy="128" rx="142" ry="8" fill="currentColor" opacity="0.1" />
