@@ -70,7 +70,6 @@ export function Testimonials() {
             </figure>
           ))}
         </div>
-
         <div className="mt-10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {Array.from({ length: last + 1 }).map((_, i) => (

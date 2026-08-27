@@ -61,3 +61,27 @@ export const TESTIMONIALS = [
   { name: "Miriam Aguilar", city: "Madrid, Spain", rating: 4.9, quote: "Booking took two minutes and the car was waiting exactly where they said it would be. I have already recommended it to three colleagues." },
   { name: "Daniel Osei", city: "Manchester, UK", rating: 4.6, quote: "Great prices on longer rentals and support actually answers the phone. That alone makes it worth staying with them." },
 ];
+
+export type AdminSidebarSection = {
+  label: string;
+  slug: string;
+  items: string[];
+};
+
+export const ADMIN_SIDEBAR_DETAILS: AdminSidebarSection[] = [
+  {
+    label: "Inventory",
+    slug: "inventory",
+    items: ["Products", "Create Product", "Expired Products", "Low Stocks", "Category", "Sub Category", "Brands", "Units", "Variant Attributes", "Warranties", "Print Barcode", "Print QR Code"],
+  },
+  {
+    label: "Stock",
+    slug: "stock",
+    items: ["Manage Stock", "Stock Adjustment", "Stock Transfer"],
+  },
+  {
+    label: "Sales",
+    slug: "sales",
+    items: ["Sales", "Invoices", "Sales Return", "Quotation", "POS"],
+  },
+];

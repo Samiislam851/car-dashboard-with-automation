@@ -2,6 +2,7 @@
 
 @theme {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-nunito: var(--font-nunito-sans), ui-sans-serif, system-ui, sans-serif;
 
   --color-ink: #1a202c;
   --color-muted: #90a3bf;
@@ -18,6 +19,16 @@
   --radius-card: 10px;
 
   --animate-rise: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  /* Admin panel theme (matches Figma design system, distinct from the public-site brand palette) */
+  --color-admin-primary: #fe9f43;
+  --color-admin-primary-50: #fff6ee;
+  --color-admin-secondary: #092c4c;
+  --color-admin-border: #e6eaed;
+  --color-admin-grey-900: #212b36;
+  --color-admin-grey-300: #a6aaaf;
+  --color-admin-surface: #fafafa;
+  --color-admin-surface-2: #f7f7f7;
 }
 
 @keyframes rise {
