@@ -1,9 +1,9 @@
 import { Headset, MapPinned, Tags } from "lucide-react";
 import { FEATURES } from "@/lib/data";
-import { CarArt } from "./car-art";
 import { SectionHeading } from "./section-heading";
 
 const ICONS = [Headset, Tags, MapPinned];
+const SUPPORT_IMAGE = "https://images.unsplash.com/photo-1766066014237-00645c74e9c6?q=80&w=600";
 
 export function WhyUs() {
   return (
@@ -15,9 +15,12 @@ export function WhyUs() {
         />
 
         <div className="mt-16 grid items-center gap-12 lg:grid-cols-2">
-          <div className="rounded-[10px] bg-gradient-to-br from-ink to-ink/80 p-10 sm:p-14">
-            <CarArt className="w-full" tint="#ffffff" />
-          </div>
+          <div
+            role="img"
+            aria-label="Customer support"
+            className="aspect-[4/3] w-full overflow-hidden rounded-[10px] bg-cover bg-center sm:aspect-[16/11]"
+            style={{ backgroundImage: `url('${SUPPORT_IMAGE}')` }}
+          />
 
           <ul className="flex flex-col gap-10">
             {FEATURES.map((feature, i) => {

@@ -16,7 +16,7 @@ export default async function Home() {
 
   return (
     <BookingProvider isAuthenticated={!!user}>
-      <SiteHeader />
+      <SiteHeader overlay />
       <main className="flex-1">
         <Hero />
         <SearchBar />

@@ -111,7 +111,7 @@ export function SearchBar() {
     <form
       id="search"
       onSubmit={submit}
-      className="container-page relative z-10 -mt-32 flex scroll-mt-24 flex-col items-stretch gap-4 lg:-mt-28 lg:flex-row"
+      className="top-[25px] container-page relative z-10 -mt-32 flex scroll-mt-24 flex-col items-stretch gap-4 lg:-mt-28 lg:flex-row"
     >
       <TripCard title="Pick - Up" prefix="pickup" trip={draft} onChange={patch} />
 

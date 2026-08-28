@@ -1,7 +1,7 @@
 import { getSessionUser } from "@/lib/session";
 import { Header } from "./header";
 
-export async function SiteHeader() {
+export async function SiteHeader({ overlay = false }: { overlay?: boolean }) {
   const user = await getSessionUser();
-  return <Header isAuthenticated={!!user} isAdmin={user?.role === "admin"} />;
+  return <Header isAuthenticated={!!user} isAdmin={user?.role === "admin"} overlay={overlay} />;
 }

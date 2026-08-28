@@ -36,6 +36,17 @@ export function ChatWidget() {
     setMessages((prev) => [...prev, userMessage, { id: replyId, role: "assistant", text: "" }]);
     setDraft("");
     setError(null);
+
+    // Known client-side already — skip the round trip and reply immediately in place of a stream.
+    if (!me) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === replyId ? { ...m, text: "Please log in to use the AI chat assistant." } : m,
+        ),
+      );
+      return;
+    }
+
     setStreaming(true);
 
     try {
@@ -47,7 +58,9 @@ export function ChatWidget() {
       });
 
       if (!res.ok || !res.body) {
-        throw new Error(res.status === 401 ? "Please log in to use chat." : "Couldn't reach the assistant.");
+        throw new Error(
+          res.status === 401 ? "Please log in to use the AI chat assistant." : "Couldn't reach the assistant.",
+        );
       }
 
       const reader = res.body.getReader();
@@ -68,9 +81,6 @@ export function ChatWidget() {
       setStreaming(false);
     }
   };
-
-  // The endpoint is authenticated, so there's nothing to offer signed-out visitors.
-  if (!me) return null;
 
   return (
     <>

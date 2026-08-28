@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,14 +18,28 @@ const LINKS = [
 export function Header({
   isAuthenticated = false,
   isAdmin = false,
+  overlay = false,
 }: {
   isAuthenticated?: boolean;
   isAdmin?: boolean;
+  /** Sit transparently over a hero image until the page is scrolled. */
+  overlay?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
   const { mutate } = useSWRConfig();
+
+  useEffect(() => {
+    if (!overlay) return;
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [overlay]);
+
+  // Transparent only at the very top of a hero page, and only where the desktop nav shows.
+  const transparent = overlay && !scrolled;
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -39,7 +53,13 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line/80 bg-white/85 backdrop-blur">
+    <header
+      className={`sticky top-0 z-40 transition-colors ${
+        transparent
+          ? "border-b border-transparent bg-white/85 backdrop-blur lg:bg-transparent lg:backdrop-blur-none"
+          : "border-b border-line/80 bg-white/85 backdrop-blur"
+      }`}
+    >
       <div className="container-page flex h-[76px] items-center justify-between gap-6">
         <Link href="/#home" aria-label="Best Car — home" className="shrink-0">
           {/* Square source with transparent margins, so it's cropped to the wordmark like the admin sidebar. */}
