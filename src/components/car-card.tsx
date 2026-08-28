@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { Fuel, Heart, Users } from "lucide-react";
 import type { Car } from "@/lib/data";
-import { CarArt } from "./car-art";
+
+/** Shown when a vehicle has no image, or when its remote image fails to load. */
+const FALLBACK_IMAGE = "/car-placeholder.svg";
 
 type Props = {
   car: Car;
@@ -12,6 +15,15 @@ type Props = {
 };
 
 export function CarCard({ car, liked, onToggleLike, onRent }: Props) {
+  const [imageSrc, setImageSrc] = useState(car.imageUrl || FALLBACK_IMAGE);
+
+  /**
+   * An image can finish failing before React hydrates, in which case the `onError`
+   * handler is attached too late to ever fire. Re-check that on mount.
+   */
+  const checkAlreadyFailed = (node: HTMLImageElement | null) => {
+    if (node?.complete && node.naturalWidth === 0) setImageSrc(FALLBACK_IMAGE);
+  };
   return (
     <article className="group flex flex-col rounded-[10px] border border-line bg-white p-6 transition hover:-translate-y-1 hover:shadow-xl hover:shadow-ink/5">
       <div className="flex items-start justify-between gap-3">
@@ -31,16 +43,15 @@ export function CarCard({ car, liked, onToggleLike, onRent }: Props) {
       </div>
 
       <div className="my-8 grid place-items-center px-2">
-        {car.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={car.imageUrl}
-            alt={car.name}
-            className="h-40 w-full rounded-lg object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <CarArt tint={car.tint} className="w-full transition-transform duration-500 group-hover:scale-105" />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          ref={checkAlreadyFailed}
+          src={imageSrc}
+          alt={car.name}
+          // Setting the same fallback twice is a no-op in React, so a broken placeholder can't loop.
+          onError={() => setImageSrc(FALLBACK_IMAGE)}
+          className="h-40 w-full rounded-lg object-cover transition-transform duration-500 group-hover:scale-105"
+        />
       </div>
 
       <ul className="flex items-center justify-between gap-2 text-sm font-medium text-muted">

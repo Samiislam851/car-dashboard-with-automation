@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FaFacebookF, FaInstagram, FaXTwitter } from "react-icons/fa6";
 
 const COLUMNS = [
@@ -18,9 +19,9 @@ export function Footer() {
       <div className="container-page">
         <div className="grid gap-12 lg:grid-cols-[292px_1fr]">
           <div>
-            <p className="text-2xl font-extrabold tracking-tight">
-              Best<span className="text-brand-600">Car</span>
-            </p>
+            <span className="relative block h-10 w-[127px]">
+              <Image src="/logo.png" alt="Best Car" fill sizes="127px" className="object-cover" />
+            </span>
             <p className="mt-5 max-w-[292px] text-base leading-relaxed text-ink/60">
               Our vision is to provide convenience and help increase your sales business.
             </p>

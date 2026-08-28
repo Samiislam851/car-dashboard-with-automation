@@ -64,7 +64,7 @@ const AdminSideBar = ({ open, onNavigate }: { open: boolean; onNavigate?: () => 
       <div className="flex h-screen w-[252px] flex-col font-nunito">
         <Link href="/admin" className="flex h-[65px] shrink-0 items-center border-b border-admin-border px-4 py-2.5">
           <span className="relative block h-9 w-[114.545px] shrink-0">
-            <Image src="/admin/images/logo.png" alt="Best Car" fill sizes="115px" className="object-cover" />
+            <Image src="/logo.png" alt="Best Car" fill sizes="115px" className="object-cover" />
           </span>
         </Link>
 

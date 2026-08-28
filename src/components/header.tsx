@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
 
 const LINKS = [
-  { href: "#home", label: "Home" },
-  { href: "#how-it-works", label: "How it Works" },
-  { href: "#rental-deals", label: "Rental Details" },
-  { href: "#why-us", label: "Why Choose Us" },
-  { href: "#testimonial", label: "Testimonial" },
+  { href: "/#home", label: "Home" },
+  { href: "/#how-it-works", label: "How it Works" },
+  { href: "/#rental-deals", label: "Rental Details" },
+  { href: "/#why-us", label: "Why Choose Us" },
+  { href: "/#testimonial", label: "Testimonial" },
 ];
 
 export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
@@ -30,19 +31,22 @@ export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean 
   return (
     <header className="sticky top-0 z-40 border-b border-line/80 bg-white/85 backdrop-blur">
       <div className="container-page flex h-[76px] items-center justify-between gap-6">
-        <a href="#home" className="text-2xl font-extrabold tracking-tight">
-          Best<span className="text-brand-600">Car</span>
-        </a>
+        <Link href="/#home" aria-label="Best Car — home" className="shrink-0">
+          {/* Square source with transparent margins, so it's cropped to the wordmark like the admin sidebar. */}
+          <span className="relative block h-10 w-[127px]">
+            <Image src="/logo.png" alt="Best Car" fill sizes="127px" priority className="object-cover" />
+          </span>
+        </Link>
 
         <nav className="hidden items-center gap-8 lg:flex">
           {LINKS.map((link) => (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className="text-[15px] font-medium text-ink/70 transition-colors hover:text-brand-600"
             >
               {link.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -95,14 +99,14 @@ export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean 
         <nav className="border-t border-line bg-white lg:hidden">
           <div className="container-page flex flex-col py-3">
             {LINKS.map((link) => (
-              <a
+              <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
                 className="py-3 text-[15px] font-medium text-ink/80"
               >
                 {link.label}
-              </a>
+              </Link>
             ))}
             {isAuthenticated ? (
               <>
