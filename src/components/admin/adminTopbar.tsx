@@ -37,7 +37,7 @@ const AdminTopbar = () => {
 
   return (
     <header className="relative flex h-[65px] shrink-0 items-center justify-between gap-2.5 border-b border-admin-border bg-white px-6 py-[9px] font-nunito">
-      <div className="flex min-w-0 flex-1 shrink items-center gap-2 rounded-lg border border-admin-border bg-white p-2 xl:w-[229px] xl:flex-none">
+      <div className="flex min-w-0 flex-1 shrink items-center gap-2 rounded-lg border border-admin-border bg-white p-2 xl:w-[229px] xl:flex-none ml-4">
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <img src="/admin/icons/search.svg" alt="" className="size-3.5 shrink-0" />
           <input

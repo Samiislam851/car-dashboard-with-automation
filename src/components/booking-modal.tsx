@@ -104,6 +104,15 @@ export function BookingModal() {
           </button>
         </div>
 
+        {selectedCar.imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={selectedCar.imageUrl}
+            alt={selectedCar.name}
+            className="mt-5 h-36 w-full rounded-lg object-cover"
+          />
+        )}
+
         {confirmed ? (
           <>
             <div className="mt-5 divide-y divide-line">

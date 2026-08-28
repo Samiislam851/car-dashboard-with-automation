@@ -31,7 +31,16 @@ export function CarCard({ car, liked, onToggleLike, onRent }: Props) {
       </div>
 
       <div className="my-8 grid place-items-center px-2">
-        <CarArt tint={car.tint} className="w-full transition-transform duration-500 group-hover:scale-105" />
+        {car.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={car.imageUrl}
+            alt={car.name}
+            className="h-40 w-full rounded-lg object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <CarArt tint={car.tint} className="w-full transition-transform duration-500 group-hover:scale-105" />
+        )}
       </div>
 
       <ul className="flex items-center justify-between gap-2 text-sm font-medium text-muted">

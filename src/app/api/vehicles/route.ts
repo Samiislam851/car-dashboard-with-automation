@@ -29,14 +29,14 @@ export async function GET() {
     by: ["vehicleId"],
     _count: { vehicleId: true },
   });
-  const countByVehicle = new Map(bookingCounts.map((b) => [b.vehicleId, b._count.vehicleId]));
-  const totalBookings = bookingCounts.reduce((sum, b) => sum + b._count.vehicleId, 0);
+  const countByVehicle = new Map(bookingCounts.map((b :any) => [b.vehicleId, b._count.vehicleId]));
+  const totalBookings = bookingCounts.reduce((sum:any, b:any) => sum + b._count.vehicleId, 0);
   const averageBookings = totalBookings / (bookingCounts.length || 1);
 
-  const cars = vehicles.map((vehicle) => {
+  const cars = vehicles.map((vehicle:any) => {
     const price = Number(vehicle.pricePerDay);
     const seats = vehicle.seats ?? 4;
-    const bookings = countByVehicle.get(vehicle.id) ?? 0;
+    const bookings = countByVehicle.get(vehicle.id) as number ?? 0;
 
     // "Popular" ranks by real booking volume once bookings exist; with no history yet, nothing is excluded.
     const isPopular = totalBookings === 0 || bookings >= averageBookings;
@@ -56,6 +56,7 @@ export async function GET() {
       gearbox: vehicle.transmission === "Manual" ? "Manual" : "Automatic",
       fuel: vehicle.fuelType ?? "Petrol",
       tint: tintFor(vehicle.id),
+      imageUrl: vehicle.imageUrl,
     };
   });
 

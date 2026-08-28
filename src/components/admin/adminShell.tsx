@@ -51,7 +51,7 @@ const AdminShell = ({ children, className }: { children: ReactNode; className?: 
         aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
         aria-expanded={open}
         className={`absolute top-[22px] z-50 flex size-5 cursor-pointer items-center justify-center rounded-[10px] bg-admin-primary transition-[left] duration-300 ease-in-out hover:brightness-95 ${
-          open ? "left-[242px]" : "left-[10px]"
+          open ? "left-[242px]" : "left-[4px]"
         }`}
       >
         <img

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Star } from "lucide-react";
 import { TESTIMONIALS } from "@/lib/data";
 import { SectionHeading } from "./section-heading";
@@ -8,13 +8,38 @@ import { SectionHeading } from "./section-heading";
 export function Testimonials() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
-  const [atEnd, setAtEnd] = useState(false);
-  const last = TESTIMONIALS.length - 1;
+  // How many cards fit at the current breakpoint (1 / 2 / 3), measured from the DOM.
+  const [perView, setPerView] = useState(1);
+
+  /**
+   * Only `total - perView` scroll positions are actually reachable, so the dots
+   * are derived from that rather than from the testimonial count.
+   */
+  const maxIndex = Math.max(0, TESTIMONIALS.length - perView);
+  const activeIndex = Math.min(index, maxIndex);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    // ResizeObserver fires once on observe(), which covers the initial measurement.
+    const observer = new ResizeObserver(() => {
+      const cards = Array.from(track.children) as HTMLElement[];
+      if (!cards.length) return;
+      const cardWidth = cards[0].offsetWidth;
+      const gap = cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft - cardWidth : 0;
+      const fits = Math.round((track.clientWidth + gap) / (cardWidth + gap));
+      setPerView(Math.min(Math.max(fits, 1), cards.length));
+    });
+
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, []);
 
   /** Scrolls the track so card `next` sits at the left edge. */
   const go = (next: number) => {
     const track = trackRef.current;
-    const card = track?.children[Math.min(Math.max(next, 0), last)] as HTMLElement | undefined;
+    const card = track?.children[Math.min(Math.max(next, 0), maxIndex)] as HTMLElement | undefined;
     if (track && card) track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: "smooth" });
   };
 
@@ -29,8 +54,7 @@ export function Testimonials() {
           : best,
       { i: 0, distance: Infinity },
     );
-    setIndex(nearest.i);
-    setAtEnd(track.scrollLeft + track.clientWidth >= track.scrollWidth - 2);
+    setIndex(Math.min(nearest.i, maxIndex));
   };
 
   return (
@@ -72,15 +96,15 @@ export function Testimonials() {
         </div>
         <div className="mt-10 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            {Array.from({ length: last + 1 }).map((_, i) => (
+            {Array.from({ length: maxIndex + 1 }).map((_, i) => (
               <button
                 key={i}
                 type="button"
-                aria-label={`Go to slide ${i + 1}`}
-                aria-current={i === index}
+                aria-label={`Go to slide ${i + 1} of ${maxIndex + 1}`}
+                aria-current={i === activeIndex}
                 onClick={() => go(i)}
                 className={`h-[15px] rounded-full transition-all ${
-                  i === index ? "w-[45px] bg-brand-600" : "w-[15px] bg-line hover:bg-brand-300"
+                  i === activeIndex ? "w-[45px] bg-brand-600" : "w-[15px] bg-line hover:bg-brand-300"
                 }`}
               />
             ))}
@@ -90,8 +114,8 @@ export function Testimonials() {
             <button
               type="button"
               aria-label="Previous testimonials"
-              disabled={index === 0 && !atEnd}
-              onClick={() => go(index - 1)}
+              disabled={activeIndex === 0}
+              onClick={() => go(activeIndex - 1)}
               className="grid size-[42px] place-items-center rounded-full border border-line transition hover:border-brand-600 hover:text-brand-600 disabled:opacity-40 disabled:hover:border-line disabled:hover:text-ink"
             >
               <ArrowLeft size={18} />
@@ -99,8 +123,8 @@ export function Testimonials() {
             <button
               type="button"
               aria-label="Next testimonials"
-              disabled={atEnd}
-              onClick={() => go(index + 1)}
+              disabled={activeIndex >= maxIndex}
+              onClick={() => go(activeIndex + 1)}
               className="grid size-[42px] place-items-center rounded-full bg-brand-600 text-white transition hover:bg-brand-700 disabled:opacity-40"
             >
               <ArrowRight size={18} />

@@ -11,7 +11,7 @@ const PAGE = 4;
 
 export function RentalDeals() {
   const [tab, setTab] = useState<Category>("popular");
-  const [visible, setVisible] = useState(PAGE * 2);
+  const [visible, setVisible] = useState(PAGE);
   const [liked, setLiked] = useState<string[]>([]);
   const { selectCar } = useBooking();
   const { data: allCars, error, isLoading } = useVehicles();
@@ -24,7 +24,7 @@ export function RentalDeals() {
 
   const pickTab = (next: Category) => {
     setTab(next);
-    setVisible(PAGE * 2);
+    setVisible(PAGE);
   };
 
   const toggleLike = (id: string) =>

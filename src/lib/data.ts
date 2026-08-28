@@ -10,6 +10,7 @@ export type Car = {
   gearbox: "Manual" | "Automatic";
   fuel: string;
   tint: string;
+  imageUrl: string | null;
 };
 
 export const CATEGORIES: { id: Category; label: string }[] = [
