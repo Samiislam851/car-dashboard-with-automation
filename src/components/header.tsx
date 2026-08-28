@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 
 const LINKS = [
@@ -24,10 +25,13 @@ export function Header({
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
+  const { mutate } = useSWRConfig();
 
   const handleLogout = async () => {
     setLoggingOut(true);
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    // Drop the cached session so auth-aware widgets hide immediately.
+    await mutate("/api/auth/me");
     setLoggingOut(false);
     setOpen(false);
     router.push("/");

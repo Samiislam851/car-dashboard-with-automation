@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import { Loader2 } from "lucide-react";
 
 const inputClass =
@@ -10,6 +11,7 @@ const inputClass =
 
 export function RegisterForm() {
   const router = useRouter();
+  const { mutate } = useSWRConfig();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,6 +46,8 @@ export function RegisterForm() {
         return;
       }
 
+      // Drop the cached signed-out session so auth-aware widgets update immediately.
+      await mutate("/api/auth/me");
       router.push("/");
       router.refresh();
     } catch {
