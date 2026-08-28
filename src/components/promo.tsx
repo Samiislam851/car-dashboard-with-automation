@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { unsplashSrc, unsplashSrcSet } from "@/lib/images";
 
 const PROMOS = [
   {
@@ -27,12 +27,15 @@ export function Promo() {
             key={promo.title}
             className="relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-[10px] p-8 text-white sm:p-10"
           >
-            <Image
-              src={promo.image}
-              alt={promo.alt}
-              fill
+            {/* Straight from the Unsplash CDN — see src/lib/images.ts for why not next/image. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={unsplashSrc(promo.image, 1080)}
+              srcSet={unsplashSrcSet(promo.image)}
               sizes="(min-width: 1024px) 50vw, 100vw"
-              className="object-cover"
+              alt={promo.alt}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
             />
 
             {/*

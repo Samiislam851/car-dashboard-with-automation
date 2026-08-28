@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,9 +27,27 @@ export function Header({
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
   const { mutate } = useSWRConfig();
+
+  // Dismiss the mobile menu when tapping anywhere outside the header.
+  useEffect(() => {
+    if (!open) return;
+    const onOutside = (event: Event) => {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    // Both events so it works with a mouse and with touch.
+    document.addEventListener("mousedown", onOutside);
+    document.addEventListener("touchstart", onOutside);
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("touchstart", onOutside);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!overlay) return;
@@ -54,6 +72,7 @@ export function Header({
 
   return (
     <header
+      ref={headerRef}
       className={`sticky top-0 z-40 transition-colors ${
         transparent
           ? "border-b border-transparent bg-white/85 backdrop-blur lg:bg-transparent lg:backdrop-blur-none"
@@ -134,8 +153,12 @@ export function Header({
         </button>
       </div>
 
+      {/*
+        Absolute + top-full drops the menu below the bar without adding to the header's height,
+        so it overlays the page instead of pushing the content underneath it down.
+      */}
       {open && (
-        <nav className="border-t border-line bg-white lg:hidden">
+        <nav className="absolute inset-x-0 top-full animate-slide-down border-t border-line bg-white shadow-lg lg:hidden">
           <div className="container-page flex flex-col py-3">
             {LINKS.map((link) => (
               <Link

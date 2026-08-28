@@ -1,7 +1,8 @@
-import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
+import { unsplashSrc, unsplashSrcSet } from "@/lib/images";
 
-const BANNER = "/hero_banner.jpg";
+const BANNER = "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=1600";
+const BANNER_ALT = "A car parked on an open road";
 
 export function Hero() {
   return (
@@ -11,20 +12,19 @@ export function Hero() {
       className="relative -mt-[76px] overflow-hidden bg-surface pt-[76px] pb-40 lg:min-h-[800px] lg:pb-48"
     >
       {/*
-        Desktop only: full-bleed background, cropped to the top so the car sits low and centre-right.
-        `display:none` alone would still download the file, so `sizes` tells narrow viewports the
-        image is 1px wide and the browser picks the smallest srcset entry instead.
+        Plain <img> on purpose: the browser fetches straight from the Unsplash CDN, so the
+        server never downloads or re-encodes the photo. `sizes` keeps narrow viewports from
+        pulling the desktop variant they can't see.
       */}
-      <div className="absolute inset-0 hidden lg:block">
-        <Image
-          src={BANNER}
-          alt=""
-          fill
-          priority
-          sizes="(min-width: 1024px) 100vw, 1px"
-          className="object-cover object-top"
-        />
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={unsplashSrc(BANNER, 1920)}
+        srcSet={unsplashSrcSet(BANNER)}
+        sizes="(min-width: 1024px) 100vw, 1px"
+        alt=""
+        fetchPriority="high"
+        className="absolute inset-0 hidden h-full w-full object-cover object-top lg:block"
+      />
 
       {/*
         Grey on the left for the copy, fading out well before the car so the vehicle stays
@@ -34,6 +34,22 @@ export function Hero() {
         aria-hidden
         className="absolute inset-0 hidden lg:block lg:bg-gradient-to-r lg:from-surface lg:from-25% lg:via-surface/75 lg:via-42% lg:to-transparent lg:to-60%"
       />
+
+      {/*
+        Mobile: the banner sits directly under the header, edge to edge and square-cornered, so it
+        lives outside `container-page` (which would otherwise inset it by the page gutter).
+      */}
+      <div className="relative z-10 aspect-[3/2] w-full lg:hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={unsplashSrc(BANNER, 828)}
+          srcSet={unsplashSrcSet(BANNER)}
+          sizes="(max-width: 1023px) 100vw, 1px"
+          alt={BANNER_ALT}
+          fetchPriority="high"
+          className="h-full w-full object-cover"
+        />
+      </div>
 
       <div className="relative z-10 container-page pt-10 lg:pt-20">
         <div className="max-w-[560px] animate-rise">
