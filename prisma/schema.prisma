@@ -63,3 +63,16 @@ model Booking {
 
   @@map("bookings")
 }
+
+// Knowledge base for retrieval-augmented chat. `embedding` has no native Prisma
+// scalar (pgvector isn't a first-class Prisma type), so it's declared as
+// Unsupported and only ever read/written via $queryRaw / $executeRaw.
+model KnowledgeChunk {
+  id        String                      @id @default(uuid())
+  category  String
+  content   String
+  embedding Unsupported("vector(384)")
+  createdAt DateTime                    @default(now()) @map("created_at")
+
+  @@map("knowledge_chunks")
+}

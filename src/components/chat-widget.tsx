@@ -8,6 +8,14 @@ type Message = { id: number; role: "user" | "assistant"; text: string };
 
 const meFetcher = (url: string) => fetch(url).then((res) => (res.ok ? res.json() : null));
 
+/**
+ * The model's tokens don't arrive evenly — there's a pause while it thinks, then the
+ * whole reply lands in a couple of hundred milliseconds, often several tokens per
+ * millisecond. Rendering them as they arrive therefore looks instantaneous. So we
+ * buffer what the network gives us and reveal it on our own clock instead.
+ */
+const REVEAL_INTERVAL_MS = 28;
+
 export function ChatWidget() {
   // Checked client-side so mounting the widget doesn't force every page to render dynamically.
   const { data: me } = useSWR<{ name?: string } | null>("/api/auth/me", meFetcher, {
@@ -20,10 +28,55 @@ export function ChatWidget() {
   const [error, setError] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
+  const receivedRef = useRef("");   // everything the network has handed us
+  const revealedRef = useRef(0);    // how much of it the user can see
+  const upstreamDoneRef = useRef(false);
+  const revealTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Keep the newest message in view as it streams in.
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
+
+  const stopReveal = () => {
+    if (revealTimerRef.current) {
+      clearInterval(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+  };
+
+  useEffect(() => stopReveal, []);
+
+  /** Walks the buffer forward one word per tick so the reply types itself out. */
+  const startReveal = (replyId: number) => {
+    stopReveal();
+    revealTimerRef.current = setInterval(() => {
+      const full = receivedRef.current;
+
+      if (revealedRef.current >= full.length) {
+        // Caught up. Only finish once the network has actually closed.
+        if (upstreamDoneRef.current) {
+          stopReveal();
+          setStreaming(false);
+        }
+        return;
+      }
+
+      // Speed up when a lot is queued, so long answers don't crawl.
+      const backlog = full.length - revealedRef.current;
+      const wordsThisTick = backlog > 240 ? 3 : backlog > 90 ? 2 : 1;
+
+      let cursor = revealedRef.current;
+      for (let i = 0; i < wordsThisTick && cursor < full.length; i += 1) {
+        const nextSpace = full.indexOf(" ", cursor + 1);
+        cursor = nextSpace === -1 ? full.length : nextSpace;
+      }
+      revealedRef.current = cursor;
+
+      const visible = full.slice(0, cursor);
+      setMessages((prev) => prev.map((m) => (m.id === replyId ? { ...m, text: visible } : m)));
+    }, REVEAL_INTERVAL_MS);
+  };
 
   const send = async (event: FormEvent) => {
     event.preventDefault();
@@ -48,6 +101,10 @@ export function ChatWidget() {
     }
 
     setStreaming(true);
+    receivedRef.current = "";
+    revealedRef.current = 0;
+    upstreamDoneRef.current = false;
+    startReveal(replyId);
 
     try {
       const res = await fetch("/api/chat", {
@@ -69,16 +126,17 @@ export function ChatWidget() {
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        const piece = decoder.decode(value, { stream: true });
-        setMessages((prev) =>
-          prev.map((m) => (m.id === replyId ? { ...m, text: m.text + piece } : m)),
-        );
+        // Feed the buffer; the reveal timer decides when it becomes visible.
+        receivedRef.current += decoder.decode(value, { stream: true });
       }
+
+      // Let the reveal loop drain what's left, then it clears `streaming` itself.
+      upstreamDoneRef.current = true;
     } catch (err) {
+      stopReveal();
+      setStreaming(false);
       setError(err instanceof Error ? err.message : "Something went wrong.");
       setMessages((prev) => prev.filter((m) => m.id !== replyId));
-    } finally {
-      setStreaming(false);
     }
   };
 

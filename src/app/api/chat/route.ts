@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
+import { retrieveRelevantKnowledge } from "@/lib/retrieval";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "openai/gpt-4o-mini";
@@ -91,6 +92,25 @@ function streamCompletion(userMessage: string) {
   });
 }
 
+/**
+ * Retrieval-augmentation step, kept separate from streamCompletion (the LLM
+ * provider integration) on purpose: this only ever changes the string that
+ * gets passed in, never how it's sent to OpenRouter. If retrieval fails for
+ * any reason, we fall back to the plain question rather than fail the request.
+ */
+async function buildPromptWithContext(question: string): Promise<string> {
+  try {
+    const chunks = await retrieveRelevantKnowledge(question, 3);
+    if (chunks.length === 0) return question;
+
+    const context = chunks.map((chunk) => chunk.content).join("\n---\n");
+    return `Relevant company information:\n${context}\n\nQuestion: ${question}`;
+  } catch (error) {
+    console.error("Knowledge retrieval failed", error);
+    return question;
+  }
+}
+
 export async function POST(request: NextRequest) {
   // The JWT travels in the httpOnly cookie, so the session is read server-side.
   const user = await getSessionUser();
@@ -105,9 +125,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
 
+  const prompt = await buildPromptWithContext(message.trim());
+
   let stream: ReadableStream<Uint8Array>;
   try {
-    stream = streamCompletion(message.trim());
+    stream = streamCompletion(prompt);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Assistant is not configured" }, { status: 500 });
