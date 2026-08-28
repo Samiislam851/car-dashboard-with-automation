@@ -59,6 +59,20 @@
 
 html { scroll-behavior: smooth; }
 
+/*
+ * iOS Safari auto-zooms the page whenever a focused form control has a font-size
+ * below 16px, and it never zooms back out on blur. Every control here is 13-14px
+ * by design, so we lift them to 16px on small screens only — desktop typography
+ * is unchanged, and 16px is the more comfortable touch size anyway.
+ */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 body {
   background: #fff;
   color: var(--color-ink);

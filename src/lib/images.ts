@@ -8,7 +8,9 @@
  * and it burns the image-optimisation quota for no benefit — Unsplash's CDN
  * already does the resizing for free.
  */
-const WIDTHS = [640, 828, 1080, 1440, 1920, 2560];
+// The leading 16 exists so a breakpoint-hidden image (whose `sizes` resolves to 1px)
+// can settle on a ~1KB entry instead of the smallest real one.
+const WIDTHS = [16, 640, 828, 1080, 1440, 1920, 2560];
 
 const base = (src: string) => src.split("?")[0];
 
