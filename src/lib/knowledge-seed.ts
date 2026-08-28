@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { prisma } from "./prisma";
-import { embed, toVectorLiteral } from "./embeddings";
+import { embedBatch, toVectorLiteral } from "./embeddings";
 import { KNOWLEDGE_SEED_DATA } from "./knowledge-data";
 
 export async function runKnowledgeSeed() {
@@ -17,21 +17,25 @@ export async function runKnowledgeSeed() {
     };
   }
 
-  let inserted = 0;
-  for (const entry of KNOWLEDGE_SEED_DATA) {
-    const vector = await embed(entry.content);
+  // One batched embeddings request for every chunk, rather than one request per chunk.
+  const vectors = await embedBatch(
+    KNOWLEDGE_SEED_DATA.map((entry) => entry.content),
+    "document",
+  );
+
+  for (let i = 0; i < KNOWLEDGE_SEED_DATA.length; i++) {
+    const entry = KNOWLEDGE_SEED_DATA[i];
     const id = randomUUID();
 
     await prisma.$executeRaw`
       INSERT INTO knowledge_chunks (id, category, content, embedding, created_at)
-      VALUES (${id}, ${entry.category}, ${entry.content}, ${toVectorLiteral(vector)}::vector, now())
+      VALUES (${id}, ${entry.category}, ${entry.content}, ${toVectorLiteral(vectors[i])}::vector, now())
     `;
-    inserted++;
   }
 
   return {
     seeded: true,
-    chunks: inserted,
+    chunks: KNOWLEDGE_SEED_DATA.length,
     message: "Knowledge base seed data created.",
   };
 }

@@ -21,7 +21,7 @@ export async function retrieveRelevantKnowledge(
   question: string,
   limit: number = DEFAULT_LIMIT,
 ): Promise<RetrievedChunk[]> {
-  const queryEmbedding = await embed(question);
+  const queryEmbedding = await embed(question, "query");
   const literal = toVectorLiteral(queryEmbedding);
 
   return prisma.$queryRaw<RetrievedChunk[]>`

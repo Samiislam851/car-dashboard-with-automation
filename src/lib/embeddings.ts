@@ -1,26 +1,68 @@
-import { pipeline, type FeatureExtractionPipeline } from "@huggingface/transformers";
-
 /**
- * Runs fully locally (ONNX runtime, no API key, no network call after the first
- * model download) — deliberately chosen so embedding generation doesn't depend
- * on the OpenRouter key used for chat completions.
+ * Voyage AI embeddings (https://docs.voyageai.com/reference/embeddings-api).
+ * Runs server-side only — never expose VOYAGE_API_KEY to client code.
  */
-const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
-export const EMBEDDING_DIMENSIONS = 384;
+const VOYAGE_URL = "https://api.voyageai.com/v1/embeddings";
+const VOYAGE_MODEL = "voyage-4-lite";
+export const EMBEDDING_DIMENSIONS = 1024;
 
-let extractorPromise: Promise<FeatureExtractionPipeline> | null = null;
+export type EmbeddingInputType = "document" | "query";
 
-function getExtractor() {
-  if (!extractorPromise) {
-    extractorPromise = pipeline("feature-extraction", MODEL_ID);
+function getApiKey(): string {
+  const apiKey = process.env.VOYAGE_API_KEY;
+  if (!apiKey) {
+    throw new Error("VOYAGE_API_KEY is not set");
   }
-  return extractorPromise;
+  return apiKey;
 }
 
-export async function embed(text: string): Promise<number[]> {
-  const extractor = await getExtractor();
-  const output = await extractor(text, { pooling: "mean", normalize: true });
-  return Array.from(output.data as Float32Array);
+type VoyageEmbeddingItem = { embedding: number[]; index: number };
+type VoyageEmbeddingResponse = { data: VoyageEmbeddingItem[] };
+
+/** Batched call — pass every chunk you need embedded in one request rather than one per chunk. */
+async function callVoyageEmbeddings(inputs: string[], inputType: EmbeddingInputType): Promise<number[][]> {
+  const apiKey = getApiKey();
+
+  let res: Response;
+  try {
+    res = await fetch(VOYAGE_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        input: inputs,
+        model: VOYAGE_MODEL,
+        input_type: inputType,
+        output_dimension: EMBEDDING_DIMENSIONS,
+      }),
+    });
+  } catch (error) {
+    // Never include the key itself in the error.
+    throw new Error(`Voyage embeddings request failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "");
+    throw new Error(`Voyage embeddings request failed (${res.status}): ${errorText}`);
+  }
+
+  const data: VoyageEmbeddingResponse = await res.json();
+  // Voyage returns items tagged with their input index — sort defensively so the
+  // output order always matches the input order regardless of response order.
+  return [...data.data].sort((a, b) => a.index - b.index).map((item) => item.embedding);
+}
+
+export async function embed(text: string, inputType: EmbeddingInputType): Promise<number[]> {
+  const [vector] = await callVoyageEmbeddings([text], inputType);
+  return vector;
+}
+
+/** Embeds many chunks in a single Voyage request instead of one request per chunk. */
+export async function embedBatch(texts: string[], inputType: EmbeddingInputType): Promise<number[][]> {
+  if (texts.length === 0) return [];
+  return callVoyageEmbeddings(texts, inputType);
 }
 
 export function toVectorLiteral(embedding: number[]): string {
