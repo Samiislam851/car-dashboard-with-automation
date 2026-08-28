@@ -1,33 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 
-/**
- * Placeholder reply, streamed word by word so the client-side rendering path is
- * identical to a real LLM. Swap `streamReply` for the provider call later —
- * the request/response contract here already matches a streaming completion.
- */
-function cannedReply(message: string, name: string) {
-  return [
-    `Hi ${name}, thanks for your message!`,
-    `You asked: "${message}".`,
-    "I'm a placeholder assistant for now — a real model isn't wired up yet,",
-    "but this reply is streaming back exactly the way a live one will.",
-    "Once the LLM API is connected you'll get genuine answers about bookings,",
-    "vehicle availability and pricing right here.",
-  ].join(" ");
-}
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+const DEFAULT_MODEL = "openai/gpt-4o-mini";
 
-function streamReply(text: string) {
+const SYSTEM_PROMPT =
+  "You are the Best Car Assistant, a helpful support agent for a car rental platform. " +
+  "Answer questions about bookings, vehicle availability, and pricing concisely and helpfully. " +
+  "If you don't know something specific to this business, say so rather than making it up.";
+
+/**
+ * Calls OpenRouter's streaming chat-completions endpoint and re-emits only the
+ * plain-text deltas, so the client keeps reading a flat text/plain stream
+ * exactly as it did with the placeholder reply.
+ */
+function streamCompletion(userMessage: string) {
+  const apiKey = process.env.LLM_API_KEY;
+  if (!apiKey) {
+    throw new Error("LLM_API_KEY is not set");
+  }
+
   const encoder = new TextEncoder();
-  const chunks = text.split(/(\s+)/).filter(Boolean);
+  const decoder = new TextDecoder();
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {
-      for (const chunk of chunks) {
-        controller.enqueue(encoder.encode(chunk));
-        // Typing cadence — drop this when a real provider supplies the timing.
-        await new Promise((resolve) => setTimeout(resolve, 40));
+      let upstream: Response;
+      try {
+        upstream = await fetch(OPENROUTER_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: process.env.LLM_MODEL ?? DEFAULT_MODEL,
+            stream: true,
+            messages: [
+              { role: "system", content: SYSTEM_PROMPT },
+              { role: "user", content: userMessage },
+            ],
+          }),
+        });
+      } catch (error) {
+        console.error("OpenRouter request failed", error);
+        controller.enqueue(encoder.encode("Sorry, the assistant is unavailable right now."));
+        controller.close();
+        return;
       }
+
+      if (!upstream.ok || !upstream.body) {
+        console.error("OpenRouter error", upstream.status, await upstream.text().catch(() => ""));
+        controller.enqueue(encoder.encode("Sorry, the assistant is unavailable right now."));
+        controller.close();
+        return;
+      }
+
+      const reader = upstream.body.getReader();
+      let buffer = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? ""; // keep a possibly-incomplete trailing line for the next chunk
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed.startsWith("data:")) continue;
+
+          const payload = trimmed.slice("data:".length).trim();
+          if (payload === "[DONE]") continue;
+
+          try {
+            const parsed = JSON.parse(payload);
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (typeof content === "string" && content.length > 0) {
+              controller.enqueue(encoder.encode(content));
+            }
+          } catch {
+            // Ignore keep-alive / malformed SSE lines.
+          }
+        }
+      }
+
       controller.close();
     },
   });
@@ -47,7 +105,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }
 
-  return new Response(streamReply(cannedReply(message.trim(), user.email.split("@")[0])), {
+  let stream: ReadableStream<Uint8Array>;
+  try {
+    stream = streamCompletion(message.trim());
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Assistant is not configured" }, { status: 500 });
+  }
+
+  return new Response(stream, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "no-store",
