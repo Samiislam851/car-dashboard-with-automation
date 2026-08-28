@@ -9,10 +9,13 @@ import { RentalDeals } from "@/components/rental-deals";
 import { SearchBar } from "@/components/search-bar";
 import { Testimonials } from "@/components/testimonials";
 import { WhyUs } from "@/components/why-us";
+import { getSessionUser } from "@/lib/session";
 
-export default function Home() {
+export default async function Home() {
+  const user = await getSessionUser();
+
   return (
-    <BookingProvider>
+    <BookingProvider isAuthenticated={!!user}>
       <SiteHeader />
       <main className="flex-1">
         <Hero />

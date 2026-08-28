@@ -19,25 +19,6 @@ export const CATEGORIES: { id: Category; label: string }[] = [
   { id: "exclusive", label: "Exclusive Car" },
 ];
 
-export const CARS: Car[] = [
-  { id: "all-new-rush", name: "All New Rush", type: "SUV", category: ["popular", "large"], price: 72, seats: 6, gearbox: "Manual", fuel: "70L", tint: "#3563e9" },
-  { id: "cr-v", name: "CR - V", type: "SUV", category: ["popular", "large"], price: 80, seats: 6, gearbox: "Manual", fuel: "80L", tint: "#0f172a" },
-  { id: "all-new-terios", name: "All New Terios", type: "SUV", category: ["popular", "large"], price: 74, seats: 6, gearbox: "Manual", fuel: "90L", tint: "#f97316" },
-  { id: "cr-v-auto", name: "CR - V", type: "SUV", category: ["popular", "exclusive"], price: 99, seats: 6, gearbox: "Automatic", fuel: "80L", tint: "#0ea5e9" },
-  { id: "mg-zx-exclusive", name: "MG ZX Exclusive", type: "Hatchback", category: ["popular", "small", "exclusive"], price: 76, seats: 4, gearbox: "Manual", fuel: "70L", tint: "#ef4444" },
-  { id: "new-mg-zs", name: "New MG ZS", type: "SUV", category: ["popular", "small"], price: 80, seats: 6, gearbox: "Manual", fuel: "80L", tint: "#22c55e" },
-  { id: "mg-zx-excite", name: "MG ZX Excite", type: "Hatchback", category: ["small"], price: 74, seats: 4, gearbox: "Manual", fuel: "90L", tint: "#a855f7" },
-  { id: "new-rush-auto", name: "New Rush", type: "Sedan", category: ["exclusive", "large"], price: 72, seats: 6, gearbox: "Manual", fuel: "70L", tint: "#64748b" },
-  { id: "koenigsegg", name: "Koenigsegg", type: "Sport", category: ["exclusive"], price: 99, seats: 2, gearbox: "Manual", fuel: "90L", tint: "#facc15" },
-  { id: "nissan-gt-r", name: "Nissan GT - R", type: "Sport", category: ["exclusive", "popular"], price: 80, seats: 2, gearbox: "Manual", fuel: "80L", tint: "#111827" },
-  { id: "rolls-royce", name: "Rolls - Royce", type: "Sedan", category: ["exclusive", "large"], price: 96, seats: 4, gearbox: "Manual", fuel: "70L", tint: "#7c3aed" },
-  { id: "city-hatch", name: "City Hatch", type: "Hatchback", category: ["small", "popular"], price: 68, seats: 4, gearbox: "Automatic", fuel: "60L", tint: "#14b8a6" },
-  { id: "corolla-cross", name: "Corolla Cross", type: "SUV", category: ["popular", "large"], price: 88, seats: 5, gearbox: "Automatic", fuel: "75L", tint: "#e11d48" },
-  { id: "civic-turbo", name: "Civic Turbo", type: "Sedan", category: ["popular"], price: 78, seats: 5, gearbox: "Automatic", fuel: "70L", tint: "#1d4ed8" },
-  { id: "polo-gti", name: "Polo GTI", type: "Hatchback", category: ["popular", "small"], price: 70, seats: 4, gearbox: "Manual", fuel: "55L", tint: "#f59e0b" },
-  { id: "range-evoque", name: "Range Evoque", type: "SUV", category: ["popular", "exclusive"], price: 120, seats: 5, gearbox: "Automatic", fuel: "85L", tint: "#059669" },
-];
-
 export const CITIES = ["London", "Manchester", "Birmingham", "Liverpool", "Edinburgh", "Bristol"];
 
 export const TIMES = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00"];
@@ -69,6 +50,11 @@ export type AdminSidebarSection = {
 };
 
 export const ADMIN_SIDEBAR_DETAILS: AdminSidebarSection[] = [
+  {
+    label: "Main",
+    slug: "main",
+    items: ["Dashboard", "Super Admin"],
+  },
   {
     label: "Inventory",
     slug: "inventory",

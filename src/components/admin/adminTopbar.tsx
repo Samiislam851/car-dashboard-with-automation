@@ -9,6 +9,7 @@ const AdminTopbar = () => {
   const [store, setStore] = useState(STORES[0]);
   const [storeOpen, setStoreOpen] = useState(false);
   const storeRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!storeOpen) return;
@@ -21,21 +22,42 @@ const AdminTopbar = () => {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [storeOpen]);
 
+  // ⌘K on macOS / Ctrl+K elsewhere jumps to the search field.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchRef.current?.focus();
+        searchRef.current?.select();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
-    <header className="relative flex h-[65px] shrink-0 items-center gap-2 border-b border-admin-border bg-white py-2.5 pr-4 pl-10 font-nunito md:gap-2.5 md:pr-6">
+    <header className="relative flex h-[65px] shrink-0 items-center justify-between gap-2.5 border-b border-admin-border bg-white px-6 py-[9px] font-nunito">
       <div className="flex min-w-0 flex-1 shrink items-center gap-2 rounded-lg border border-admin-border bg-white p-2 xl:w-[229px] xl:flex-none">
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <img src="/admin/icons/search.svg" alt="" className="size-3.5 shrink-0" />
           <input
+            ref={searchRef}
             type="text"
             placeholder="Search"
+            aria-keyshortcuts="Meta+K Control+K"
+            onKeyDown={(event) => event.key === "Escape" && event.currentTarget.blur()}
             className="w-full min-w-0 truncate bg-transparent text-[13px] leading-[19.5px] text-admin-grey-900 placeholder:text-admin-grey-300 outline-none"
           />
         </div>
-        <div className="hidden shrink-0 items-center gap-1 rounded-[5px] bg-admin-border p-1 xl:flex">
+        <button
+          type="button"
+          aria-label="Focus search"
+          onClick={() => searchRef.current?.focus()}
+          className="hidden shrink-0 cursor-pointer items-center gap-1 rounded-[5px] bg-admin-border p-1 transition hover:brightness-95 xl:flex"
+        >
           <img src="/admin/icons/command.svg" alt="" className="size-2.5" />
           <span className="text-[10px] leading-[15px] font-medium text-admin-secondary">K</span>
-        </div>
+        </button>
       </div>
 
       <div className="flex shrink-0 items-center gap-2 md:gap-3">

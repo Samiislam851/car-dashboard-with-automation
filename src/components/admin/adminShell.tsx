@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore, type ReactNode } from "react";
 import AdminSideBar from "./adminSideBar";
 import AdminTopbar from "./adminTopbar";
+import { AdminFooter } from "./adminFooter";
 
 const MOBILE_QUERY = "(max-width: 767px)";
 
@@ -26,11 +27,14 @@ const AdminShell = ({ children, className }: { children: ReactNode; className?: 
   const open = openOverride ?? !isMobile;
 
   return (
-    <div className={`relative flex h-screen ${className ?? ""}`}>
+    <div className={`relative flex h-screen overflow-hidden ${className ?? ""}`}>
       <AdminSideBar open={open} onNavigate={() => isMobile && setOpenOverride(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <AdminTopbar />
-        <main className="flex-1 overflow-y-auto bg-surface p-4 md:p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-surface">
+          <div className="p-4 md:p-6">{children}</div>
+          <AdminFooter />
+        </main>
       </div>
 
       {open && (

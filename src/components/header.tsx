@@ -48,15 +48,23 @@ export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean 
 
         <div className="hidden items-center gap-5 lg:flex">
           {isAuthenticated ? (
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={loggingOut}
-              className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
-            >
-              <LogOut size={16} />
-              {loggingOut ? "Logging out…" : "Log Out"}
-            </button>
+            <>
+              <Link
+                href="/bookings"
+                className="text-[15px] font-medium text-ink/70 transition-colors hover:text-brand-600"
+              >
+                My Bookings
+              </Link>
+              <button
+                type="button"
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="inline-flex items-center gap-2 rounded-md bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+              >
+                <LogOut size={16} />
+                {loggingOut ? "Logging out…" : "Log Out"}
+              </button>
+            </>
           ) : (
             <>
               <Link href="/register" className="text-[15px] font-medium text-ink/70 underline-offset-4 hover:underline">
@@ -97,15 +105,24 @@ export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean 
               </a>
             ))}
             {isAuthenticated ? (
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-600 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-              >
-                <LogOut size={16} />
-                {loggingOut ? "Logging out…" : "Log Out"}
-              </button>
+              <>
+                <Link
+                  href="/bookings"
+                  onClick={() => setOpen(false)}
+                  className="py-3 text-[15px] font-medium text-ink/80"
+                >
+                  My Bookings
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md bg-brand-600 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  <LogOut size={16} />
+                  {loggingOut ? "Logging out…" : "Log Out"}
+                </button>
+              </>
             ) : (
               <div className="flex gap-3 py-3">
                 <Link

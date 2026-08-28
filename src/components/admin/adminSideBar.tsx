@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { ChevronDown, LayoutGrid, LogOut, UserPen, type LucideIcon } from "lucide-react";
 import { ADMIN_SIDEBAR_DETAILS } from "@/lib/data";
 
 const ITEM_ICONS: Record<string, string> = {
@@ -28,8 +30,13 @@ const ITEM_ICONS: Record<string, string> = {
   POS: "/admin/icons/device-laptop.svg",
 };
 
+const LUCIDE_ITEM_ICONS: Record<string, LucideIcon> = {
+  Dashboard: LayoutGrid,
+  "Super Admin": UserPen,
+};
+
 // Only these items carry a trailing expand indicator in the design; every other row is a plain link.
-const ITEMS_WITH_INDICATOR = new Set(["Sales", "POS"]);
+const ITEMS_WITH_INDICATOR = new Set(["Sales", "POS", "Super Admin"]);
 
 function slugify(label: string) {
   return label.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -37,6 +44,16 @@ function slugify(label: string) {
 
 const AdminSideBar = ({ open, onNavigate }: { open: boolean; onNavigate?: () => void }) => {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    onNavigate?.();
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <aside
@@ -61,9 +78,11 @@ const AdminSideBar = ({ open, onNavigate }: { open: boolean; onNavigate?: () => 
 
                 <ul className="flex flex-col gap-1">
                   {section.items.map((item) => {
-                    const href = `/admin/${section.slug}/${slugify(item)}`;
-                    const active = pathname === href;
+                    const isDashboard = section.slug === "main" && item === "Dashboard";
+                    const href = isDashboard ? "/admin" : `/admin/${section.slug}/${slugify(item)}`;
+                    const active = isDashboard ? pathname === "/admin" : pathname === href;
                     const icon = ITEM_ICONS[item];
+                    const LucideItemIcon = LUCIDE_ITEM_ICONS[item];
 
                     return (
                       <li key={item}>
@@ -76,7 +95,13 @@ const AdminSideBar = ({ open, onNavigate }: { open: boolean; onNavigate?: () => 
                           }`}
                         >
                           <span className="flex flex-1 items-center gap-2 min-w-0">
-                            {icon && <img src={icon} alt="" className="size-4 shrink-0" />}
+                            {LucideItemIcon ? (
+                              <LucideItemIcon
+                                className={`size-4 shrink-0 ${active ? "text-admin-primary" : "text-admin-grey-600"}`}
+                              />
+                            ) : (
+                              icon && <img src={icon} alt="" className="size-4 shrink-0" />
+                            )}
                             <span
                               className={`truncate text-sm leading-[21px] font-medium ${
                                 active ? "text-admin-primary" : "text-admin-grey-900"
@@ -85,8 +110,14 @@ const AdminSideBar = ({ open, onNavigate }: { open: boolean; onNavigate?: () => 
                               {item}
                             </span>
                           </span>
-                          {ITEMS_WITH_INDICATOR.has(item) && (
-                            <img src="/admin/icons/chevron-right-badge.svg" alt="" className="size-4 shrink-0" />
+                          {isDashboard ? (
+                            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-admin-primary/15">
+                              <ChevronDown className="size-3 text-admin-primary" />
+                            </span>
+                          ) : (
+                            ITEMS_WITH_INDICATOR.has(item) && (
+                              <img src="/admin/icons/chevron-right-badge.svg" alt="" className="size-4 shrink-0" />
+                            )
                           )}
                         </Link>
                       </li>
@@ -97,6 +128,18 @@ const AdminSideBar = ({ open, onNavigate }: { open: boolean; onNavigate?: () => 
             </div>
           ))}
         </nav>
+
+        <div className="shrink-0 border-t border-admin-border p-6">
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="flex w-full cursor-pointer items-center gap-2.5 rounded-[10px] px-3 py-2 text-sm font-medium text-admin-grey-900 transition-colors hover:bg-admin-surface disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <LogOut className="size-4 shrink-0" />
+            <span>{loggingOut ? "Logging out…" : "Log Out"}</span>
+          </button>
+        </div>
       </div>
     </aside>
   );

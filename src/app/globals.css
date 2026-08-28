@@ -33,6 +33,16 @@
   --color-admin-stroke: #919eab;
   --color-admin-success: #28c76f;
   --color-admin-warning: #ff9900;
+
+  /* Exact Figma system colours for tables, badges and muted copy. */
+  --color-admin-muted: #646b72;
+  --color-admin-grey-500: #7a8086;
+  --color-admin-info: #155eef;
+  --color-admin-table-head: #f9fafb;
+  --color-admin-thumb: #f2f2f2;
+  --color-admin-badge-success: #3eb780;
+  --color-admin-badge-danger: #e70d0d;
+  --color-admin-badge-pending: #06aed4;
 }
 
 @keyframes rise {

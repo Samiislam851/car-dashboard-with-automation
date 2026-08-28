@@ -26,16 +26,23 @@ type BookingState = {
   setTrip: (trip: Trip) => void;
   selectedCar: Car | null;
   selectCar: (car: Car | null) => void;
+  isAuthenticated: boolean;
 };
 
 const BookingContext = createContext<BookingState | null>(null);
 
-export function BookingProvider({ children }: { children: React.ReactNode }) {
+export function BookingProvider({
+  children,
+  isAuthenticated = false,
+}: {
+  children: React.ReactNode;
+  isAuthenticated?: boolean;
+}) {
   const [trip, setTrip] = useState<Trip>(EMPTY_TRIP);
   const [selectedCar, selectCar] = useState<Car | null>(null);
   const value = useMemo(
-    () => ({ trip, setTrip, selectedCar, selectCar }),
-    [trip, selectedCar],
+    () => ({ trip, setTrip, selectedCar, selectCar, isAuthenticated }),
+    [trip, selectedCar, isAuthenticated],
   );
   return <BookingContext value={value}>{children}</BookingContext>;
 }

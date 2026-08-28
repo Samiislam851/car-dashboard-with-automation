@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CARS, CATEGORIES, type Category } from "@/lib/data";
+import { CATEGORIES, type Category } from "@/lib/data";
+import { useVehicles } from "@/lib/vehicles";
 import { useBooking } from "./booking-context";
 import { CarCard } from "./car-card";
 import { SectionHeading } from "./section-heading";
@@ -13,8 +14,12 @@ export function RentalDeals() {
   const [visible, setVisible] = useState(PAGE * 2);
   const [liked, setLiked] = useState<string[]>([]);
   const { selectCar } = useBooking();
+  const { data: allCars, error, isLoading } = useVehicles();
 
-  const cars = useMemo(() => CARS.filter((car) => car.category.includes(tab)), [tab]);
+  const cars = useMemo(
+    () => (allCars ?? []).filter((car) => car.category.includes(tab)),
+    [allCars, tab],
+  );
   const shown = cars.slice(0, visible);
 
   const pickTab = (next: Category) => {
@@ -58,34 +63,48 @@ export function RentalDeals() {
           })}
         </div>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {shown.map((car) => (
-            <CarCard
-              key={car.id}
-              car={car}
-              liked={liked.includes(car.id)}
-              onToggleLike={toggleLike}
-              onRent={selectCar}
-            />
-          ))}
-        </div>
-
-        <div className="relative mt-12 flex flex-col-reverse items-center justify-center gap-4 sm:flex-row">
-          {visible < cars.length ? (
-            <button
-              type="button"
-              onClick={() => setVisible((v) => v + PAGE)}
-              className="rounded-md bg-brand-600 px-8 py-3 text-base font-semibold text-white transition hover:bg-brand-700"
-            >
-              Show more car
-            </button>
-          ) : (
-            <p className="text-sm font-medium text-muted">That&apos;s every car in this category</p>
-          )}
-          <p className="text-sm font-medium text-muted sm:absolute sm:right-5">
-            {shown.length} of {cars.length} cars
+        {isLoading ? (
+          <p className="mt-14 text-center text-sm font-medium text-muted">Loading cars…</p>
+        ) : error ? (
+          <p className="mt-14 text-center text-sm font-medium text-red-600">
+            Couldn&apos;t load cars right now. Please try again shortly.
           </p>
-        </div>
+        ) : cars.length === 0 ? (
+          <p className="mt-14 text-center text-sm font-medium text-muted">
+            No cars in this category yet.
+          </p>
+        ) : (
+          <>
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+              {shown.map((car) => (
+                <CarCard
+                  key={car.id}
+                  car={car}
+                  liked={liked.includes(car.id)}
+                  onToggleLike={toggleLike}
+                  onRent={selectCar}
+                />
+              ))}
+            </div>
+
+            <div className="relative mt-12 flex flex-col-reverse items-center justify-center gap-4 sm:flex-row">
+              {visible < cars.length ? (
+                <button
+                  type="button"
+                  onClick={() => setVisible((v) => v + PAGE)}
+                  className="rounded-md bg-brand-600 px-8 py-3 text-base font-semibold text-white transition hover:bg-brand-700"
+                >
+                  Show more car
+                </button>
+              ) : (
+                <p className="text-sm font-medium text-muted">That&apos;s every car in this category</p>
+              )}
+              <p className="text-sm font-medium text-muted sm:absolute sm:right-5">
+                {shown.length} of {cars.length} cars
+              </p>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
