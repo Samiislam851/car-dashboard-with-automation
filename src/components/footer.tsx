@@ -19,7 +19,7 @@ export function Footer() {
         <div className="grid gap-12 lg:grid-cols-[292px_1fr]">
           <div>
             <p className="text-2xl font-extrabold tracking-tight">
-              Best<span className="text-brand-600">Auto</span>
+              Best<span className="text-brand-600">Car</span>
             </p>
             <p className="mt-5 max-w-[292px] text-base leading-relaxed text-ink/60">
               Our vision is to provide convenience and help increase your sales business.
@@ -57,7 +57,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col gap-4 border-t border-line py-8 text-base font-semibold sm:flex-row sm:items-center sm:justify-between">
-          <p>©2026 Best Auto. All rights reserved</p>
+          <p>©2026 Best Car. All rights reserved</p>
           <div className="flex gap-8">
             <a href="#" className="hover:text-brand-600">Privacy &amp; Policy</a>
             <a href="#" className="hover:text-brand-600">Terms &amp; Condition</a>

@@ -31,7 +31,7 @@ export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean 
     <header className="sticky top-0 z-40 border-b border-line/80 bg-white/85 backdrop-blur">
       <div className="container-page flex h-[76px] items-center justify-between gap-6">
         <a href="#home" className="text-2xl font-extrabold tracking-tight">
-          Best<span className="text-brand-600">Auto</span>
+          Best<span className="text-brand-600">Car</span>
         </a>
 
         <nav className="hidden items-center gap-8 lg:flex">

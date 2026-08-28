@@ -8,7 +8,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Best Auto — Fast and easy way to rent a car",
+  title: "Best Car — Fast and easy way to rent a car",
   description:
     "Book a rental car in minutes. Compare popular, large, small and exclusive cars, pick your location, date and time, and drive away.",
 };

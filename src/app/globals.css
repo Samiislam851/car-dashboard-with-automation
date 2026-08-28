@@ -26,9 +26,13 @@
   --color-admin-secondary: #092c4c;
   --color-admin-border: #e6eaed;
   --color-admin-grey-900: #212b36;
+  --color-admin-grey-600: #5b6670;
   --color-admin-grey-300: #a6aaaf;
   --color-admin-surface: #fafafa;
   --color-admin-surface-2: #f7f7f7;
+  --color-admin-stroke: #919eab;
+  --color-admin-success: #28c76f;
+  --color-admin-warning: #ff9900;
 }
 
 @keyframes rise {

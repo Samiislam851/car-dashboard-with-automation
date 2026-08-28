@@ -55,7 +55,7 @@ export const FEATURES = [
 ];
 
 export const TESTIMONIALS = [
-  { name: "Viezh Robert", city: "Warsaw, Poland", rating: 4.5, quote: "Wow... I am very happy to rent here, it turned out to be more than my expectations and so far there have been no problems. Best Auto always the best." },
+  { name: "Viezh Robert", city: "Warsaw, Poland", rating: 4.5, quote: "Wow... I am very happy to rent here, it turned out to be more than my expectations and so far there have been no problems. Best Car always the best." },
   { name: "Yessica Christy", city: "Shanghai, China", rating: 4.8, quote: "I like it because I like to travel far and there are no problems with the car. The pick-up took less than five minutes at the airport desk." },
   { name: "Kim Young Jou", city: "Seoul, South Korea", rating: 4.7, quote: "This is very unusual for my business that has been running for several years, the fleet is clean and the price is honest and clear." },
   { name: "Miriam Aguilar", city: "Madrid, Spain", rating: 4.9, quote: "Booking took two minutes and the car was waiting exactly where they said it would be. I have already recommended it to three colleagues." },

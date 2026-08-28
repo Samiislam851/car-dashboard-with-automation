@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         name,
         email,
         passwordHash: await hashPassword(password),
+        role: "user",
       },
       select: {
         id: true,
