@@ -11,7 +11,6 @@ backed by a real LLM, a vector database, and a REST API layer over PostgreSQL.
 | | |
 |---|---|
 | **Live site** | https://car-dashboard-with-automation.vercel.app |
-| **Repository** | https://github.com/Samiislam851/car-dashboard-with-automation |
 | **Figma** | [Task file](https://www.figma.com/design/YZVObhEegXBdtzHYA2u0fk/Task) |
 
 ---
@@ -220,7 +219,7 @@ every message, then sends the result to a single LLM call:
   embeds the user's question and runs a similarity search (`embedding <=> query`) for
   the top 3 most relevant chunks — completely independent of the LLM call itself.
 
-### 2. Live vehicle data (never hallucinated)
+### 2. Live vehicle data
 
 - `src/lib/vehicle-lookup.ts` detects vehicle-related questions (availability, price,
   seats, type) and queries the **live `Vehicle` table** directly — this is the
@@ -294,10 +293,6 @@ It's exposed two ways so it can run in any environment:
   — both admin-gated by `proxy.ts`, and safe to call repeatedly since they no-op once
   data already exists.
 
-`scripts/test-retrieval.ts` (`yarn test:retrieval`) is a small automated check that the
-whole pipeline actually works end-to-end — it asks known questions and asserts the
-correct knowledge-base category comes back top-ranked.
-
 ---
 
 ## API
@@ -324,67 +319,3 @@ are also bounced away from `/login` and `/register`.
 | `/api/admin/knowledge/seed` | GET | Idempotent knowledge-base + embeddings seed |
 
 ---
-
-## Project structure
-
-```
-src/
-  app/
-    page.tsx              landing page
-    admin/                dashboard (own layout + Nunito font)
-    login/ register/ bookings/
-    api/                  route handlers (see table above)
-  components/
-    admin/                dashboard shell, sidebar, topbar, widgets
-    *.tsx                 landing sections, auth forms, chat widget
-  lib/
-    auth.ts               JWT + bcrypt primitives
-    session.ts             getSessionUser() — reads and verifies the cookie
-    prisma.ts              Prisma singleton
-    seed.ts                demo vehicle/booking generator
-    knowledge-data.ts       AI knowledge-base source text
-    knowledge-seed.ts       embeds + stores the knowledge base (idempotent)
-    embeddings.ts           Voyage AI embeddings client
-    retrieval.ts            pgvector similarity search — independent of the LLM
-    vehicle-lookup.ts       live vehicle inventory for the chat assistant
-    booking-action.ts       booking-intent detection + calls the real booking API
-    dashboard.ts            SWR hooks, formatters, shared types
-    images.ts               Unsplash CDN srcset helper
-  proxy.ts                 auth middleware
-prisma/schema.prisma       User · Vehicle · Booking · KnowledgeChunk
-scripts/test-retrieval.ts  standalone check for the RAG search
-docs/rag-architecture.md   original design proposal for the RAG layer
-```
-
----
-
-## Notes on a few decisions
-
-**Images bypass `next/image` for remote photos.** Routing them through `/_next/image`
-would make the server download and re-encode each one on every cold request — the
-slowest thing on the page on a small Vercel deployment, and it burns the optimisation
-quota. `src/lib/images.ts` builds a `srcset` against Unsplash's own CDN instead, so the
-browser fetches directly and the server does no image work. Local assets still use
-`next/image`.
-
-**Contrast was measured, not eyeballed.** The hero copy sits over a photograph, so the
-text/background contrast was sampled from rendered screenshots and tuned until it
-cleared WCAG AAA rather than relying on judgement.
-
-**Form controls are 16px on mobile.** iOS Safari auto-zooms any focused control under
-16px and never zooms back out, so a scoped media query lifts them — this avoids the
-common `maximum-scale=1` workaround, which would break pinch-zoom for low-vision users.
-
-**Registration cannot self-assign a role.** `/api/auth/register` hardcodes
-`role: "user"`; admin has to be granted directly in the database.
-
-**Booking automation reuses the real API — it doesn't duplicate it.** The chat
-assistant calls the exact same `POST /api/bookings` the manual booking modal uses, over
-HTTP, rather than re-implementing booking-creation logic. One source of truth for what
-"creating a booking" means, whether it happens through a form or through conversation.
-
-**The LLM is used for extraction, not just chat.** Resolving "which vehicle do they
-mean" and "what trip details have they given" is a natural-language problem (partial
-names, corrections, typos) that string matching kept getting wrong in practice — so
-both use a structured-JSON prompt against the same completion function already used
-for chat, rather than fragile regex/keyword heuristics.
