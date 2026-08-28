@@ -3,5 +3,5 @@ import { Header } from "./header";
 
 export async function SiteHeader() {
   const user = await getSessionUser();
-  return <Header isAuthenticated={!!user} />;
+  return <Header isAuthenticated={!!user} isAdmin={user?.role === "admin"} />;
 }

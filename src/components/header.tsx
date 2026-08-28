@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 
 const LINKS = [
   { href: "/#home", label: "Home" },
@@ -14,7 +14,13 @@ const LINKS = [
   { href: "/#testimonial", label: "Testimonial" },
 ];
 
-export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
+export function Header({
+  isAuthenticated = false,
+  isAdmin = false,
+}: {
+  isAuthenticated?: boolean;
+  isAdmin?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
@@ -59,6 +65,15 @@ export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean 
               >
                 My Bookings
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="inline-flex items-center gap-2 rounded-md border border-brand-600 px-5 py-2.5 text-sm font-semibold text-brand-600 transition hover:bg-brand-50"
+                >
+                  <LayoutDashboard size={16} />
+                  Go to admin panel
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={handleLogout}
@@ -117,6 +132,16 @@ export function Header({ isAuthenticated = false }: { isAuthenticated?: boolean 
                 >
                   My Bookings
                 </Link>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setOpen(false)}
+                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md border border-brand-600 py-2.5 text-sm font-semibold text-brand-600"
+                  >
+                    <LayoutDashboard size={16} />
+                    Go to admin panel
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={handleLogout}
