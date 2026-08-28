@@ -4,10 +4,10 @@ import { retrieveRelevantKnowledge } from "@/lib/retrieval";
 import { isVehicleQuery, getVehicleInventory, formatVehicleInventory } from "@/lib/vehicle-lookup";
 import {
   isBookingIntent,
-  findMentionedVehicle,
+  isCancelMessage,
+  getBookableVehicles,
   createBookingViaApi,
   missingTripFields,
-  type TripDetails,
 } from "@/lib/booking-action";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
@@ -111,10 +111,10 @@ function streamCompletion(userMessage: string) {
  * covers static company policy (cancellation, insurance, payment, etc.), so
  * it's not a source of truth for inventory and is labelled as such below.
  */
-async function buildPromptWithContext(question: string): Promise<string> {
+async function buildPromptWithContext(question: string, forceVehicleInventory = false): Promise<string> {
   const sections: string[] = [];
 
-  if (isVehicleQuery(question)) {
+  if (forceVehicleInventory || isVehicleQuery(question)) {
     try {
       const vehicles = await getVehicleInventory();
       sections.push(
@@ -164,30 +164,49 @@ async function drainStream(stream: ReadableStream<Uint8Array>): Promise<string> 
   return result;
 }
 
-type ExtractedTrip = TripDetails & {
+type ExtractedBooking = {
+  /** Exact name from the vehicles list passed in, or null if none was confidently identified. */
+  vehicleName: string | null;
+  startLocation: string | null;
+  endLocation: string | null;
+  startTime: string | null;
+  endTime: string | null;
   /** True when a location was given but is outside Britain — the company only operates within the UK. */
   startLocationOutsideBritain: boolean;
   endLocationOutsideBritain: boolean;
 };
 
 /**
- * Reuses streamCompletion as-is (same OpenRouter call, just drained into a
- * string instead of piped to the client) to pull pickup/drop-off location and
- * pickup/return date-time out of the conversation so far, if the customer has
- * mentioned them. Never invents a value — anything not actually said stays null.
- * Also flags whether a given location falls outside Britain, since the
- * company only operates within England, Scotland, and Wales.
+ * Reuses streamCompletion as-is (same OpenRouter call, just drained into a string
+ * instead of piped to the client) to figure out, from the WHOLE conversation, which
+ * vehicle the customer currently wants and what trip details they've given. Doing
+ * this with the LLM rather than string-matching is deliberate: it correctly handles
+ * a later correction winning over an earlier choice ("not the Range Rover, the BMW"),
+ * a partial name ("BMW" → "BMW X5"), and — critically — NOT falling back to a
+ * previously-mentioned vehicle just because the latest message names something
+ * that isn't in the fleet at all (e.g. "Mercedes"). Never invents a value — anything
+ * not actually said stays null.
  */
-async function extractTripDetails(transcript: string, vehicleName: string): Promise<ExtractedTrip | null> {
+async function extractBookingDetails(transcript: string, vehicleNames: string[]): Promise<ExtractedBooking | null> {
   const prompt =
     `Conversation so far (assistant and customer):\n${transcript}\n\n` +
-    `The customer wants to book the "${vehicleName}". From the conversation above ONLY, extract: ` +
-    "pickup location, drop-off location, pickup date/time, and return date/time. " +
+    `Vehicles available to book: ${vehicleNames.join(", ")}.\n\n` +
+    "From the conversation above, determine:\n" +
+    "1. Which ONE vehicle the customer currently wants to book, if any. Use the most recent relevant " +
+    "message as authoritative — if they corrected an earlier choice or changed their mind, go with the " +
+    "corrected one. If they name something that is NOT in the available-vehicles list above (a different " +
+    "brand/model we don't offer), this is null — do NOT substitute a different vehicle from the list. If what " +
+    "they said could match MORE THAN ONE vehicle in the list (e.g. they just said \"a Toyota\" and the list has " +
+    "two Toyota models), this is also null — do NOT guess between them; only return a name when it uniquely " +
+    "identifies exactly one vehicle. If not " +
+    "null, copy the name EXACTLY (character-for-character) from the available-vehicles list.\n" +
+    "2. Pickup location, drop-off location, pickup date/time, and return date/time, if mentioned.\n\n" +
     "Respond with ONLY a JSON object and nothing else, in exactly this shape: " +
-    '{"startLocation": string or null, "endLocation": string or null, "startTime": string or null, ' +
-    '"endTime": string or null, "startLocationOutsideBritain": boolean, "endLocationOutsideBritain": boolean}. ' +
+    '{"vehicleName": string or null, "startLocation": string or null, "endLocation": string or null, ' +
+    '"startTime": string or null, "endTime": string or null, "startLocationOutsideBritain": boolean, ' +
+    '"endLocationOutsideBritain": boolean}. ' +
     "Use ISO 8601 (e.g. \"2026-09-10T10:00:00.000Z\") for dates when a specific date/time was given. " +
-    "Use null for anything not actually mentioned — never guess or invent a value. " +
+    "Use null for anything not actually mentioned or not confidently determined — never guess or invent a value. " +
     "This company only operates within Britain (England, Scotland, and Wales): set " +
     "startLocationOutsideBritain / endLocationOutsideBritain to true only if a location WAS given and it is " +
     "somewhere outside Britain (e.g. Paris, New York, Dublin); false if it's within Britain, or no location " +
@@ -200,6 +219,7 @@ async function extractTripDetails(transcript: string, vehicleName: string): Prom
 
     const parsed = JSON.parse(match[0]);
     return {
+      vehicleName: typeof parsed.vehicleName === "string" ? parsed.vehicleName : null,
       startLocation: typeof parsed.startLocation === "string" ? parsed.startLocation : null,
       endLocation: typeof parsed.endLocation === "string" ? parsed.endLocation : null,
       startTime: typeof parsed.startTime === "string" ? parsed.startTime : null,
@@ -208,7 +228,7 @@ async function extractTripDetails(transcript: string, vehicleName: string): Prom
       endLocationOutsideBritain: parsed.endLocationOutsideBritain === true,
     };
   } catch (error) {
-    console.error("Booking slot extraction failed", error);
+    console.error("Booking detail extraction failed", error);
     return null;
   }
 }
@@ -255,40 +275,48 @@ export async function POST(request: NextRequest) {
   const userTexts = [...history.filter((m) => m.role === "user").map((m) => m.text), trimmedMessage];
   const conversationHasBookingIntent = userTexts.some((text) => isBookingIntent(text));
 
+  // The user backing out ("cancel the booking", "never mind") must win outright, even
+  // though "booking" itself also matches the booking-intent keywords above.
+  if (conversationHasBookingIntent && isCancelMessage(trimmedMessage)) {
+    return textResponse("No problem — I won't proceed with that booking. Let me know if you'd like to book a different vehicle.");
+  }
+
   if (conversationHasBookingIntent) {
-    const vehicle = await findMentionedVehicle(userTexts.join("\n"));
+    const vehicles = await getBookableVehicles();
+    const transcript = [...history, { role: "user" as const, text: trimmedMessage }]
+      .map((m) => `${m.role}: ${m.text}`)
+      .join("\n");
 
-    // No specific vehicle identified yet → falls through to the normal flow below, which
-    // already asks a clarifying question once the vehicle-inventory context is injected.
-    if (vehicle) {
-      const transcript = [...history, { role: "user" as const, text: trimmedMessage }]
-        .map((m) => `${m.role}: ${m.text}`)
-        .join("\n");
+    const extracted = await extractBookingDetails(transcript, vehicles.map((v) => v.name));
+    const vehicle = extracted?.vehicleName ? vehicles.find((v) => v.name === extracted.vehicleName) : undefined;
 
-      const trip = await extractTripDetails(transcript, vehicle.name);
-
+    // No specific (in-fleet) vehicle identified yet → falls through to the normal flow
+    // below, which already asks a clarifying question once vehicle-inventory context is
+    // injected. This also covers "that's not one of ours" (e.g. "Mercedes") correctly,
+    // since extractBookingDetails deliberately returns null rather than guessing.
+    if (vehicle && extracted) {
       // Pickup/drop-off must be within Britain — the company doesn't operate anywhere
       // else. Reject and ask again rather than silently accepting or booking with it.
-      if (trip?.startLocationOutsideBritain || trip?.endLocationOutsideBritain) {
+      if (extracted.startLocationOutsideBritain || extracted.endLocationOutsideBritain) {
         const which =
-          trip.startLocationOutsideBritain && trip.endLocationOutsideBritain
+          extracted.startLocationOutsideBritain && extracted.endLocationOutsideBritain
             ? "pickup and drop-off locations"
-            : trip.startLocationOutsideBritain
+            : extracted.startLocationOutsideBritain
               ? "pickup location"
               : "drop-off location";
 
         return textResponse(
           `We only operate within Britain (England, Scotland, and Wales), so I can't set your ${which} to ` +
-            `${trip.startLocationOutsideBritain ? trip.startLocation : trip.endLocation}. ` +
+            `${extracted.startLocationOutsideBritain ? extracted.startLocation : extracted.endLocation}. ` +
             `Could you choose a ${which === "pickup and drop-off locations" ? "pickup and drop-off location" : which} within Britain instead?`,
         );
       }
 
-      const missing = missingTripFields(trip);
+      const missing = missingTripFields(extracted);
 
       // Required detail is missing → ask for it. This step is never skipped: the booking
       // API is only ever called once every field below has actually been provided.
-      if (missing.length > 0 || !trip) {
+      if (missing.length > 0) {
         return textResponse(
           `Great — I can help you book the ${vehicle.name}. Could you also let me know your ${missing.join(", ")}?`,
         );
@@ -299,10 +327,10 @@ export async function POST(request: NextRequest) {
       // involved in producing this reply, by design: it must exactly match what the API
       // actually did, never a generated guess.
       const result = await createBookingViaApi(request.nextUrl.origin, request.headers.get("cookie"), vehicle.id, {
-        startLocation: trip.startLocation,
-        endLocation: trip.endLocation,
-        startTime: trip.startTime,
-        endTime: trip.endTime,
+        startLocation: extracted.startLocation,
+        endLocation: extracted.endLocation,
+        startTime: extracted.startTime,
+        endTime: extracted.endTime,
       });
 
       const reply = result.ok
@@ -314,7 +342,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const prompt = await buildPromptWithContext(trimmedMessage);
+  // Falling through from an active booking conversation (e.g. they asked about a model
+  // we don't stock) — make sure the LLM still has the real catalog, so it can say so
+  // confidently instead of asking vague clarifying questions.
+  const prompt = await buildPromptWithContext(trimmedMessage, conversationHasBookingIntent);
 
   let stream: ReadableStream<Uint8Array>;
   try {

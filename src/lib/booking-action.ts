@@ -14,13 +14,24 @@ export function isBookingIntent(message: string): boolean {
   return BOOKING_INTENT_KEYWORDS.some((keyword) => q.includes(keyword));
 }
 
+const CANCEL_KEYWORDS = ["cancel", "never mind", "nevermind", "forget it", "don't book", "do not book"];
+
+/** A user backing out mid-flow ("cancel the booking", "never mind") — must not be read as "continue booking". */
+export function isCancelMessage(message: string): boolean {
+  const q = message.toLowerCase();
+  return CANCEL_KEYWORDS.some((keyword) => q.includes(keyword));
+}
+
 export type MatchedVehicle = { id: string; name: string };
 
-/** Deliberately simple substring match against real vehicle names — no fuzzy NLP, keeps this minimal. */
-export async function findMentionedVehicle(message: string): Promise<MatchedVehicle | null> {
-  const vehicles = await prisma.vehicle.findMany({ select: { id: true, name: true } });
-  const lower = message.toLowerCase();
-  return vehicles.find((vehicle : any) => lower.includes(vehicle.name.toLowerCase())) ?? null;
+/**
+ * Plain name/ID lookup — no matching logic here. Deciding WHICH vehicle a customer
+ * means (across turns, partial names like "BMW", corrections, or "no such vehicle")
+ * needs real language understanding, not string heuristics — see resolveVehicleName
+ * in route.ts, which asks the LLM using this exact list as the allowed set.
+ */
+export async function getBookableVehicles(): Promise<MatchedVehicle[]> {
+  return prisma.vehicle.findMany({ select: { id: true, name: true } });
 }
 
 export type BookingApiResult =
