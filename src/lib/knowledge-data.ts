@@ -5,13 +5,21 @@ export type KnowledgeSeedEntry = {
 
 export const KNOWLEDGE_SEED_DATA: KnowledgeSeedEntry[] = [
   {
+    category: "Service Area",
+    content:
+      "Best Car operates exclusively within Britain (England, Scotland, and Wales) — we do not have rental " +
+      "locations, support, or vehicles available outside the UK, and we cannot arrange pickups or drop-offs " +
+      "in any other country. All bookings must start and end at one of our British locations.",
+  },
+  {
     category: "Rental Requirements",
     content:
-      "To rent a car with Best Car, you must be at least 21 years old (25 for premium and luxury vehicles) " +
-      "and hold a valid driver's license that has been held for a minimum of 1 year. You'll need to present " +
-      "a valid government-issued photo ID and a credit or debit card in the same name as the reservation. " +
-      "International renters must provide a valid passport and, if their license is not in English, an " +
-      "International Driving Permit (IDP).",
+      "To rent a car with Best Car in Britain, you must be at least 21 years old (25 for premium and luxury " +
+      "vehicles) and hold a valid full driving licence that has been held for a minimum of 1 year — a full UK " +
+      "driving licence, an EU/EEA licence, or a valid full licence from your home country. You'll need to " +
+      "present a valid government-issued photo ID and a credit or debit card in the same name as the " +
+      "reservation. Visitors from outside the UK must provide a valid passport and, if their licence is not " +
+      "in English, an International Driving Permit (IDP).",
   },
   {
     category: "Cancellation Policy",
@@ -24,9 +32,10 @@ export const KNOWLEDGE_SEED_DATA: KnowledgeSeedEntry[] = [
   {
     category: "Payment Methods",
     content:
-      "Best Car accepts Visa, Mastercard, American Express, PayPal, Apple Pay, and select local payment " +
-      "providers (PayU, Paytm) depending on region. A valid credit or debit card is required at pickup for " +
-      "the security deposit hold, even if the booking was prepaid online. Cash is not accepted for deposits.",
+      "Best Car accepts Visa, Mastercard, American Express, PayPal, Apple Pay, and Google Pay. All prices, " +
+      "payments, and deposits are charged in British Pounds (GBP, £). A valid credit or debit card is " +
+      "required at pickup for the security deposit hold, even if the booking was prepaid online. Cash is " +
+      "not accepted for deposits.",
   },
   {
     category: "Insurance",
@@ -40,10 +49,12 @@ export const KNOWLEDGE_SEED_DATA: KnowledgeSeedEntry[] = [
   {
     category: "Pickup Locations",
     content:
-      "Best Car operates pickup and drop-off locations at major international airports, downtown city " +
-      "branches, and select train stations. Airport locations offer 24/7 pickup with a shuttle service from " +
-      "the terminal. City branches are typically open from 7am to 10pm. You can choose a different drop-off " +
-      "location from your pickup location for an additional one-way fee, subject to availability.",
+      "Best Car operates pickup and drop-off locations across Britain, including major airports (Heathrow, " +
+      "Gatwick, Manchester, Birmingham, and Edinburgh), city-centre branches in London, Manchester, " +
+      "Birmingham, and Glasgow, and select national rail stations. Airport locations offer 24/7 pickup with " +
+      "a shuttle service from the terminal. City branches are typically open from 7am to 10pm. You can " +
+      "choose a different drop-off location from your pickup location, anywhere within Britain, for an " +
+      "additional one-way fee, subject to availability.",
   },
   {
     category: "FAQ",
@@ -61,8 +72,9 @@ export const KNOWLEDGE_SEED_DATA: KnowledgeSeedEntry[] = [
   {
     category: "FAQ",
     content:
-      "Is there a mileage limit? Most rentals include unlimited mileage within the country of rental. " +
-      "Cross-border travel may have restrictions, so check your rental agreement for details.",
+      "Is there a mileage limit? Most rentals include unlimited mileage within Britain. Taking the vehicle " +
+      "outside the UK — for example onto mainland Europe via the Channel Tunnel or ferry — is not permitted " +
+      "under the standard rental agreement.",
   },
   {
     category: "FAQ",

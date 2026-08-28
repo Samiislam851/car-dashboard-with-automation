@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/session";
 import { retrieveRelevantKnowledge } from "@/lib/retrieval";
+import { isVehicleQuery, getVehicleInventory, formatVehicleInventory } from "@/lib/vehicle-lookup";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "openai/gpt-4o-mini";
@@ -93,22 +94,45 @@ function streamCompletion(userMessage: string) {
 }
 
 /**
- * Retrieval-augmentation step, kept separate from streamCompletion (the LLM
- * provider integration) on purpose: this only ever changes the string that
- * gets passed in, never how it's sent to OpenRouter. If retrieval fails for
- * any reason, we fall back to the plain question rather than fail the request.
+ * Retrieval- and vehicle-augmentation step, kept separate from streamCompletion
+ * (the LLM provider integration) on purpose: this only ever changes the string
+ * that gets passed in, never how it's sent to OpenRouter. Each source is
+ * best-effort — a failure in one doesn't block the other or fail the request.
+ *
+ * Live vehicle data (availability/price/seats/type) always comes from the
+ * Vehicle table, never from the RAG knowledge base — the knowledge base only
+ * covers static company policy (cancellation, insurance, payment, etc.), so
+ * it's not a source of truth for inventory and is labelled as such below.
  */
 async function buildPromptWithContext(question: string): Promise<string> {
+  const sections: string[] = [];
+
+  if (isVehicleQuery(question)) {
+    try {
+      const vehicles = await getVehicleInventory();
+      sections.push(
+        "Live vehicle inventory from our database (this is the authoritative, up-to-date source for " +
+          "availability, price, seats, and vehicle type — do not rely on the company information section " +
+          "below for these facts):\n" +
+          formatVehicleInventory(vehicles),
+      );
+    } catch (error) {
+      console.error("Vehicle inventory lookup failed", error);
+    }
+  }
+
   try {
     const chunks = await retrieveRelevantKnowledge(question, 3);
-    if (chunks.length === 0) return question;
-
-    const context = chunks.map((chunk) => chunk.content).join("\n---\n");
-    return `Relevant company information:\n${context}\n\nQuestion: ${question}`;
+    if (chunks.length > 0) {
+      sections.push(`Relevant company information:\n${chunks.map((chunk) => chunk.content).join("\n---\n")}`);
+    }
   } catch (error) {
     console.error("Knowledge retrieval failed", error);
-    return question;
   }
+
+  if (sections.length === 0) return question;
+
+  return `${sections.join("\n\n")}\n\nQuestion: ${question}`;
 }
 
 export async function POST(request: NextRequest) {
