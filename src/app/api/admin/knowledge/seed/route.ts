@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { runKnowledgeSeed } from "@/lib/knowledge-seed";
 
-export async function POST() {
+export async function GET() {
   try {
     const result = await runKnowledgeSeed();
     return NextResponse.json(result, { status: result.seeded ? 201 : 200 });

@@ -83,6 +83,9 @@ export function ChatWidget() {
     const text = draft.trim();
     if (!text || streaming) return;
 
+
+    const history = messages.map((m) => ({ role: m.role, text: m.text }));
+
     const userMessage: Message = { id: Date.now(), role: "user", text };
     const replyId = userMessage.id + 1;
 
@@ -111,7 +114,7 @@ export function ChatWidget() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // The JWT rides along in the httpOnly cookie automatically.
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, history }),
       });
 
       if (!res.ok || !res.body) {
